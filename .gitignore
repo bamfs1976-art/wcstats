@@ -18,6 +18,11 @@ export-preview.png
 # Keep the large source images and CSVs out of the published site.
 data/*.JPG
 data/*.jpg
+data/*.jpeg
 data/*.png
+data/*.webp
+data/*.HEIC
+data/*.heic
+data/*.heif
 data/*.pdf
 data/*.csv
