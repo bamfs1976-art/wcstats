@@ -11,7 +11,7 @@ A single-file tool for World Cup 2026 player-bookings analysis. Team discipline 
 ## Tabs
 
 - **Teams** sortable table of cards against, fouls made and cards for per game, with tier badges and a combustible flag. Star your targets, add notes.
-- **Matchups** pick Team A, Team B is locked to the same group so every pairing is a real fixture. Shows the kick-off date, time in UTC and venue. Transparent heat score out of 10. Below the heat, a per-fixture player layer ranks each squad by club-form booking risk (yellow rate per 90 weighted double plus fouls per 90), a risk-by-line positional view, and a PNG export of the matchup card.
+- **Matchups** pick Team A, Team B is locked to the same group so every pairing is a real fixture. Shows the kick-off date, time in BST and venue. Any fixture falling 5 to 14 July 2026 also shows Seychelles time (SCT, UTC+4). Note the current schedule is the group stage, all in June, so the Seychelles line activates only when knockout fixtures are added. Transparent heat score out of 10. Below the heat, a per-fixture player layer ranks each squad by club-form booking risk (yellow rate per 90 weighted double plus fouls per 90), a risk-by-line positional view, and a PNG export of the matchup card.
 - **Referees** a working watchlist, figures flagged where the sample is small.
 - **Tracker** log each pick with odds and stake, settle it won, lost or void, and see a running hit-rate, staked total, P/L and ROI. For the group-stage hit-rate trial.
 - **Guide** the method, the tiers, the heat formula and the known limits.

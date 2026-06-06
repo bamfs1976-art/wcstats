@@ -1664,11 +1664,24 @@ function esc(s){ const d=document.createElement("div"); d.textContent=s; return 
 // fixture lookup by sorted code pair
 function fixtureFor(a,b){ return (typeof FIXTURES!=="undefined") ? FIXTURES[[a.c,b.c].sort().join("|")] : null; }
 const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+// shift a stored UTC datetime 'YYYY-MM-DD HH:MM' by offset hours, return a Date
+function shiftUTC(dstr,offsetH){
+  const m=/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(dstr); if(!m) return null;
+  return new Date(Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5])+offsetH*3600000);
+}
+const hhmm=d=>String(d.getUTCHours()).padStart(2,"0")+":"+String(d.getUTCMinutes()).padStart(2,"0");
+const dmy=d=>`${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+// Seychelles window: 5 to 14 July 2026 inclusive, judged on BST date
+function inSeyWindow(bst){ return bst.getUTCFullYear()===2026 && bst.getUTCMonth()===6 && bst.getUTCDate()>=5 && bst.getUTCDate()<=14; }
 function fmtFixture(fx){
   if(!fx) return "";
-  const m=/^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(fx.d);
-  if(!m) return fx.d;
-  return `${parseInt(m[3])} ${MONTHS[parseInt(m[2])-1]} ${m[1]} · ${m[4]}:${m[5]} UTC`;
+  const bst=shiftUTC(fx.d,1); if(!bst) return fx.d;          // BST = UTC+1
+  let s=`${dmy(bst)} · ${hhmm(bst)} BST`;
+  if(inSeyWindow(bst)){
+    const sey=shiftUTC(fx.d,4);                              // SCT = UTC+4
+    s+=` · ${hhmm(sey)} SCT${sey.getUTCDate()!==bst.getUTCDate()?" ("+dmy(sey)+")":""}`;
+  }
+  return s;
 }
 
 // ---- crests: FIFA code to ISO for flagcdn, emoji as graceful fallback ----
