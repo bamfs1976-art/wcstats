@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://flagcdn.com; connect-src 'self'">
 <title>WC26 Bookings Desk</title>
 <meta name="description" content="World Cup 2026 player-bookings analysis. Team cards-against and fouls-made, a same-group matchup heat calculator and a referee watchlist.">
 <script src="https://cdn.tailwindcss.com"></script>
@@ -45,6 +45,7 @@
   tbody tr{border-top:1px solid var(--border)}
   tbody tr:hover{background:var(--bg-tertiary)}
   .num{font-variant-numeric:tabular-nums}
+  .crest{border-radius:3px;object-fit:cover;vertical-align:-4px;box-shadow:0 0 0 1px var(--border);display:inline-block}
   .star{background:none;border:0;cursor:pointer;font-size:1.1rem;line-height:1;color:var(--text-muted);padding:.2rem}
   .star[aria-pressed="true"]{color:var(--accent-green)}
   .tabbtn{padding:.6rem 1rem; border-radius:10px 10px 0 0; border:1px solid transparent; border-bottom:0; background:none; color:var(--text-secondary); font-weight:600; cursor:pointer}
@@ -1584,6 +1585,14 @@ function heatScore(a,b){
 function heatColour(s){ if(s>=7) return "var(--danger)"; if(s>=5) return "var(--warn)"; if(s>=3) return "var(--accent-green)"; return "var(--text-muted)"; }
 function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
 
+// ---- crests: FIFA code to ISO for flagcdn, emoji as graceful fallback ----
+const FLAG={CZE:"cz",KOR:"kr",RSA:"za",MEX:"mx",BIH:"ba",SUI:"ch",QAT:"qa",CAN:"ca",BRA:"br",MAR:"ma",HAI:"ht",SCO:"gb-sct",TUR:"tr",USA:"us",PAR:"py",AUS:"au",GER:"de",CUW:"cw",CIV:"ci",ECU:"ec",SWE:"se",NED:"nl",JPN:"jp",TUN:"tn",BEL:"be",EGY:"eg",IRN:"ir",NZL:"nz",ESP:"es",CPV:"cv",KSA:"sa",URU:"uy",FRA:"fr",SEN:"sn",NOR:"no",IRQ:"iq",ARG:"ar",ALG:"dz",AUT:"at",JOR:"jo",POR:"pt",COL:"co",COD:"cd",UZB:"uz",CRO:"hr",GHA:"gh",PAN:"pa",ENG:"gb-eng"};
+function crest(team,size){
+  size=size||22; const iso=FLAG[team.c];
+  if(!iso) return `<span aria-hidden="true">${team.f}</span>`;
+  return `<img class="crest" src="https://flagcdn.com/w40/${iso}.png" width="${Math.round(size*1.33)}" height="${size}" alt="" loading="lazy" onerror="this.outerHTML='<span aria-hidden=\\'true\\'>${team.f}</span>'">`;
+}
+
 // ---- teams table ----
 let sortKey="ca", sortDir=-1;
 const $=(id)=>document.getElementById(id);
@@ -1619,7 +1628,7 @@ function renderTeams(){
     const on=!!state.targets[t.c];
     tr.innerHTML=
       `<td style="padding:.35rem .7rem"><button class="star" aria-pressed="${on}" aria-label="${on?'Remove':'Add'} ${esc(t.n)} ${on?'from':'to'} targets" data-code="${t.c}">${on?'★':'☆'}</button></td>`+
-      `<td style="padding:.5rem .7rem"><span aria-hidden="true">${t.f}</span> ${esc(t.n)} ${comb?'<span title="Combustible" aria-label="Combustible">🔥</span>':''}</td>`+
+      `<td style="padding:.5rem .7rem">${crest(t,18)} ${esc(t.n)} ${comb?'<span title="Combustible" aria-label="Combustible">🔥</span>':''}</td>`+
       `<td style="text-align:center" class="muted num">${t.g}</td>`+
       `<td style="text-align:right" class="num"><strong>${t.ca==null?'—':t.ca.toFixed(1)}</strong></td>`+
       `<td style="text-align:right" class="num">${t.fm==null?'—':t.fm.toFixed(1)}</td>`+
@@ -1656,7 +1665,7 @@ function renderHeat(){
   out.innerHTML=
     `<div class="surface" style="border-radius:12px;padding:1.1rem">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap">
-        <h2 style="margin:0;font-size:1.2rem">${a.f} ${esc(a.n)} <span class="faint">v</span> ${b.f} ${esc(b.n)}</h2>
+        <h2 style="margin:0;font-size:1.2rem">${crest(a,20)} ${esc(a.n)} <span class="faint">v</span> ${crest(b,20)} ${esc(b.n)}</h2>
         <div class="display" style="font-size:2rem;color:${col}">${score.toFixed(1)}<span class="faint" style="font-size:1rem">/10</span></div>
       </div>
       <p class="muted" style="margin:.2rem 0 .8rem;font-weight:600;color:${col}">${verdict}</p>
@@ -1701,23 +1710,112 @@ function playerColumn(team){
   if(!scored.length) rows=`<li class="muted" style="padding:.6rem 0;font-size:.85rem">No club-league data for this squad. Players are in leagues outside the dataset.</li>`;
   return `<div class="surface" style="border-radius:12px;padding:.9rem 1rem">
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.5rem">
-      <h3 style="margin:0;font-size:1.05rem">${team.f} ${esc(team.n)}</h3>
+      <h3 style="margin:0;font-size:1.05rem">${crest(team,18)} ${esc(team.n)}</h3>
       <span class="faint" style="font-size:.72rem">${scored.length}/${all.length} with club data</span>
     </div>
     <ol style="list-style:none;margin:.4rem 0 0;padding:0">${rows}</ol>
     ${none?`<p class="faint" style="font-size:.72rem;margin:.5rem 0 0">${none} more in leagues outside the club dataset.</p>`:''}
   </div>`;
 }
+// positional risk, group squad_pos into lines
+function posGroup(p){ const x=(p||"").toUpperCase(); if(x.startsWith("GK"))return"GK"; if(x.startsWith("DF")||x.startsWith("DEF"))return"DEF"; if(x.startsWith("FW")||x.startsWith("FWD"))return"FWD"; return"MID"; }
+function pitchFor(team){
+  const ps=PLAYERS.filter(p=>p.t===team.c);
+  const bands=["FWD","MID","DEF","GK"];
+  const rows=bands.map(band=>{
+    const inBand=ps.filter(p=>posGroup(p.p)===band && p.r!=null).sort((a,b)=>b.r-a.r);
+    const chips=inBand.slice(0,2).map(p=>`<span class="chip" style="background:${riskColour(p.r)};color:#0b1220;font-weight:700">${esc(p.n.split(' ').slice(-1)[0]||p.n)} ${p.r.toFixed(1)}</span>`).join(" ");
+    return `<div style="display:flex;align-items:center;gap:.6rem;padding:.4rem .2rem;border-top:1px solid rgba(255,255,255,.08)">
+      <span class="faint num" style="width:34px;font-size:.7rem;flex:none">${band}</span>
+      <span style="display:flex;gap:.35rem;flex-wrap:wrap">${chips||'<span class="faint" style="font-size:.78rem">no club data</span>'}</span></div>`;
+  }).join("");
+  return `<div style="background:linear-gradient(180deg,rgba(34,197,94,.10),rgba(34,197,94,.02));border:1px solid var(--border);border-radius:12px;padding:.6rem .8rem">
+    <div style="display:flex;align-items:center;gap:.45rem;margin-bottom:.2rem">${crest(team,16)} <strong style="font-size:.92rem">${esc(team.n)}</strong></div>
+    ${rows}</div>`;
+}
 function renderPlayers(a,b){
   $("playerLayer").innerHTML=
-    `<div class="surface" style="border-radius:12px;padding:.7rem 1rem;margin-bottom:.8rem">
-      <h2 style="margin:0;font-size:1.05rem">Player booking risk, club form</h2>
-      <p class="muted" style="margin:.25rem 0 0;font-size:.8rem">Squad players ranked by club-form risk, yellow rate per 90 weighted double plus fouls per 90. This is club form, not international, and it is not a starter list. Referee blending and confirmed line-ups layer on once known.</p>
+    `<div class="surface" style="border-radius:12px;padding:.7rem 1rem;margin-bottom:.8rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
+      <div>
+        <h2 style="margin:0;font-size:1.05rem">Player booking risk, club form</h2>
+        <p class="muted" style="margin:.25rem 0 0;font-size:.8rem">Ranked by club-form risk, yellow rate per 90 weighted double plus fouls per 90. Club form, not international, and not a starter list.</p>
+      </div>
+      <button id="exportBtn" class="surface-2" style="border:1px solid var(--accent-green);color:var(--accent-green);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer;flex:none">⬇ Export PNG</button>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:.8rem">
       ${playerColumn(a)}${playerColumn(b)}
+    </div>
+    <div class="surface" style="border-radius:12px;padding:.8rem 1rem;margin-top:.8rem">
+      <h3 style="margin:0 0 .3rem;font-size:1rem">Risk by line</h3>
+      <p class="faint" style="margin:0 0 .6rem;font-size:.74rem">Highest club-form risk per position band. Where the card danger sits, not a confirmed XI.</p>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:.7rem">${pitchFor(a)}${pitchFor(b)}</div>
     </div>`;
+  $("exportBtn").addEventListener("click",()=>exportMatchupPNG(a,b));
 }
+
+// ---- PNG export of the matchup card (pure canvas, no external assets) ----
+function heatHex(s){ return s>=7?'#ef4444':s>=5?'#f59e0b':s>=3?'#22c55e':'#64748b'; }
+function riskHex(r){ if(r==null)return'#64748b'; return r>=2.5?'#ef4444':r>=1.8?'#f59e0b':r>=1.2?'#22c55e':'#94a3b8'; }
+async function exportMatchupPNG(a,b){
+  try{ if(document.fonts&&document.fonts.ready) await document.fonts.ready; }catch(e){}
+  const W=1000,H=660,P=44, c=document.createElement("canvas");
+  c.width=W; c.height=H; const x=c.getContext("2d");
+  const disp="'Bricolage Grotesque',sans-serif", body="'Hanken Grotesk',sans-serif";
+  x.fillStyle="#0f172a"; x.fillRect(0,0,W,H);
+  x.fillStyle="#22c55e"; x.fillRect(0,0,W,6);
+  // header
+  x.textBaseline="alphabetic";
+  x.fillStyle="#94a3b8"; x.font=`600 14px ${body}`; x.fillText("WC26 BOOKINGS DESK · MATCHUP CARD",P,52);
+  x.fillStyle="#f1f5f9"; x.font=`700 34px ${disp}`;
+  const title=`${a.n}  v  ${b.n}`; x.fillText(title,P,96);
+  x.fillStyle="#94a3b8"; x.font=`500 15px ${body}`; x.fillText(`Group ${a.g} · per-game form into WC2026`,P,120);
+  // heat score top right
+  const {score,avgCards,avgFouls}=heatScore(a,b);
+  const hh=heatHex(score);
+  x.textAlign="right"; x.fillStyle=hh; x.font=`700 58px ${disp}`; x.fillText(score.toFixed(1),W-P,96);
+  x.fillStyle="#64748b"; x.font=`600 16px ${body}`; x.fillText("HEAT /10",W-P,118); x.textAlign="left";
+  // heat bar
+  const barY=140,barW=W-P*2;
+  x.fillStyle="#334155"; roundRect(x,P,barY,barW,16,8); x.fill();
+  x.fillStyle=hh; roundRect(x,P,barY,barW*(score/10),16,8); x.fill();
+  const verdict=score>=7?"High card risk fixture":score>=5?"Above average card risk":score>=3?"Moderate card risk":"Low card risk";
+  x.fillStyle=hh; x.font=`700 18px ${body}`; x.fillText(verdict,P,barY+44);
+  // stat cells
+  const sy=210, cells=[["Avg cards against",avgCards.toFixed(2),"60% weight"],["Avg fouls made",avgFouls.toFixed(2),"40% weight"],[`${a.c} tier`,tierLabel(tierOf(a.ca)),`${a.ca.toFixed(1)} ca · ${a.fm.toFixed(1)} fm`],[`${b.c} tier`,tierLabel(tierOf(b.ca)),`${b.ca.toFixed(1)} ca · ${b.fm.toFixed(1)} fm`]];
+  const cw=(W-P*2-30)/4;
+  cells.forEach((cell,i)=>{ const cx=P+i*(cw+10);
+    x.fillStyle="#1e293b"; roundRect(x,cx,sy,cw,72,10); x.fill();
+    x.fillStyle="#64748b"; x.font=`600 11px ${body}`; x.fillText(cell[0].toUpperCase(),cx+12,sy+22);
+    x.fillStyle="#f1f5f9"; x.font=`700 22px ${disp}`; x.fillText(String(cell[1]),cx+12,sy+48);
+    x.fillStyle="#94a3b8"; x.font=`500 11px ${body}`; x.fillText(cell[2],cx+12,sy+64);
+  });
+  // player columns
+  const py=320, colW=(W-P*2-30)/2;
+  [a,b].forEach((team,ci)=>{ const cx=P+ci*(colW+30);
+    x.fillStyle="#f1f5f9"; x.font=`700 18px ${disp}`; x.fillText(team.n,cx,py);
+    const top=PLAYERS.filter(p=>p.t===team.c&&p.r!=null).sort((m,n)=>n.r-m.r).slice(0,6);
+    if(!top.length){ x.fillStyle="#64748b"; x.font=`500 14px ${body}`; x.fillText("No club-league data",cx,py+30); }
+    top.forEach((p,i)=>{ const ry=py+30+i*32;
+      x.fillStyle="#334155"; x.font=`700 13px ${body}`; x.fillText(String(i+1),cx,ry);
+      x.fillStyle="#e2e8f0"; x.font=`600 15px ${body}`;
+      let nm=p.n; while(x.measureText(nm).width>colW-110) nm=nm.slice(0,-1);
+      x.fillText(nm,cx+22,ry);
+      x.textAlign="right"; x.fillStyle=riskHex(p.r); x.font=`700 16px ${disp}`; x.fillText(p.r.toFixed(2),cx+colW,ry); x.textAlign="left";
+    });
+  });
+  // footer
+  x.fillStyle="#475569"; x.font=`500 12px ${body}`;
+  x.fillText(`heat = (${avgCards.toFixed(2)}/3.1 × 6) + (${avgFouls.toFixed(2)}/15.4 × 4) = ${score.toFixed(1)}`,P,H-44);
+  x.fillStyle="#64748b"; x.font=`500 12px ${body}`;
+  x.fillText("Team form via ScoutingStats · player risk club form only · research, not a betting guarantee",P,H-22);
+  // download
+  c.toBlob(blob=>{
+    const url=URL.createObjectURL(blob), aEl=document.createElement("a");
+    aEl.href=url; aEl.download=`wc26-${a.c}-v-${b.c}.png`; aEl.click();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+  },"image/png");
+}
+function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath(); }
 
 // ---- referees ----
 function renderRefs(){

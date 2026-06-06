@@ -10,6 +10,10 @@ __pycache__/
 # Netlify
 .netlify/
 
+# Test and preview artifacts
+.playwright-mcp/
+export-preview.png
+
 # Working data, not needed for deploy. The app has its data baked in.
 # Keep the large source images and CSVs out of the published site.
 data/*.JPG
