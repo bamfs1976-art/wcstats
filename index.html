@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en-GB" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'">
+<title>WC26 Bookings Desk</title>
+<meta name="description" content="World Cup 2026 player-bookings analysis. Team cards-against and fouls-made, a same-group matchup heat calculator and a referee watchlist.">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-primary:#0f172a; --bg-secondary:#1e293b; --bg-tertiary:#334155;
+    --text-primary:#f1f5f9; --text-secondary:#94a3b8; --text-muted:#64748b;
+    --accent-green:#22c55e; --accent-blue:#3b82f6; --danger:#ef4444;
+    --warn:#f59e0b; --border:#475569;
+    --target:#22c55e; --mid:#f59e0b; --fade:#64748b; --pending:#6366f1;
+  }
+  html[data-theme="light"]{
+    --bg-primary:#f8fafc; --bg-secondary:#ffffff; --bg-tertiary:#e2e8f0;
+    --text-primary:#0f172a; --text-secondary:#475569; --text-muted:#64748b;
+    --border:#cbd5e1;
+  }
+  *{box-sizing:border-box}
+  body{background:var(--bg-primary); color:var(--text-primary); font-family:'Hanken Grotesk',system-ui,sans-serif; margin:0; transition:background .2s,color .2s}
+  h1,h2,h3,.display{font-family:'Bricolage Grotesque',system-ui,sans-serif; letter-spacing:-.02em}
+  .surface{background:var(--bg-secondary); border:1px solid var(--border)}
+  .surface-2{background:var(--bg-tertiary)}
+  .muted{color:var(--text-secondary)}
+  .faint{color:var(--text-muted)}
+  a{color:var(--accent-blue)}
+  /* focus visibility for WCAG 2.2 */
+  a:focus-visible,button:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{
+    outline:3px solid var(--accent-blue); outline-offset:2px; border-radius:6px}
+  .tier-target{background:rgba(34,197,94,.15); color:var(--accent-green); border:1px solid rgba(34,197,94,.4)}
+  .tier-mid{background:rgba(245,158,11,.15); color:var(--warn); border:1px solid rgba(245,158,11,.4)}
+  .tier-fade{background:rgba(100,116,139,.15); color:var(--text-secondary); border:1px solid rgba(100,116,139,.4)}
+  .tier-pending{background:rgba(99,102,241,.15); color:#a5b4fc; border:1px solid rgba(99,102,241,.4)}
+  .chip{display:inline-flex; align-items:center; gap:.35rem; padding:.15rem .55rem; border-radius:999px; font-size:.72rem; font-weight:600; line-height:1.4}
+  table{border-collapse:collapse; width:100%}
+  th{position:sticky; top:0; background:var(--bg-secondary); z-index:1}
+  th button{font:inherit; color:var(--text-secondary); background:none; border:0; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:.25rem; width:100%}
+  tbody tr{border-top:1px solid var(--border)}
+  tbody tr:hover{background:var(--bg-tertiary)}
+  .num{font-variant-numeric:tabular-nums}
+  .star{background:none;border:0;cursor:pointer;font-size:1.1rem;line-height:1;color:var(--text-muted);padding:.2rem}
+  .star[aria-pressed="true"]{color:var(--accent-green)}
+  .tabbtn{padding:.6rem 1rem; border-radius:10px 10px 0 0; border:1px solid transparent; border-bottom:0; background:none; color:var(--text-secondary); font-weight:600; cursor:pointer}
+  .tabbtn[aria-selected="true"]{background:var(--bg-secondary); color:var(--text-primary); border-color:var(--border)}
+  .heatbar{height:14px;border-radius:999px;background:var(--bg-tertiary);overflow:hidden}
+  .heatfill{height:100%;border-radius:999px;transition:width .3s}
+  select,textarea,input{background:var(--bg-primary); color:var(--text-primary); border:1px solid var(--border); border-radius:8px; padding:.5rem .6rem; font:inherit}
+  .note-input{width:100%; min-height:2.2rem; resize:vertical}
+  .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+  .skip{position:absolute;left:-999px;top:0;background:var(--accent-green);color:#06210f;padding:.5rem .8rem;border-radius:0 0 8px 0;z-index:50}
+  .skip:focus{left:0}
+</style>
+</head>
+<body>
+<a href="#main" class="skip">Skip to content</a>
+<header class="surface" style="border-left:0;border-right:0;border-top:0">
+  <div style="max-width:1180px;margin:0 auto;padding:1rem 1.1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+    <div>
+      <h1 style="margin:0;font-size:1.55rem">WC26 Bookings Desk</h1>
+      <p class="muted" style="margin:.15rem 0 0;font-size:.85rem">World Cup 2026 player-bookings analysis. Team discipline, matchup heat and a referee watchlist.</p>
+    </div>
+    <button id="themeToggle" class="surface-2" style="border:1px solid var(--border);border-radius:10px;padding:.5rem .8rem;cursor:pointer;color:var(--text-primary);font-weight:600" aria-pressed="false">
+      <span aria-hidden="true">🌙</span> <span id="themeLabel">Dark</span>
+    </button>
+  </div>
+</header>
+
+<main id="main" style="max-width:1180px;margin:0 auto;padding:1rem 1.1rem 4rem">
+  <div role="tablist" aria-label="Sections" style="display:flex;gap:.3rem;border-bottom:1px solid var(--border);margin-bottom:1rem;flex-wrap:wrap">
+    <button class="tabbtn" role="tab" id="tab-teams" aria-controls="panel-teams" aria-selected="true">Teams</button>
+    <button class="tabbtn" role="tab" id="tab-matchups" aria-controls="panel-matchups" aria-selected="false" tabindex="-1">Matchups</button>
+    <button class="tabbtn" role="tab" id="tab-refs" aria-controls="panel-refs" aria-selected="false" tabindex="-1">Referees</button>
+    <button class="tabbtn" role="tab" id="tab-guide" aria-controls="panel-guide" aria-selected="false" tabindex="-1">Guide</button>
+  </div>
+
+  <!-- TEAMS -->
+  <section id="panel-teams" role="tabpanel" aria-labelledby="tab-teams">
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.8rem">
+      <input id="search" type="search" placeholder="Search team" aria-label="Search team" style="flex:1;min-width:160px">
+      <label class="muted" style="font-size:.85rem">Tier
+        <select id="tierFilter" aria-label="Filter by tier">
+          <option value="all">All</option>
+          <option value="target">Target</option>
+          <option value="mid">Mid</option>
+          <option value="fade">Fade</option>
+          <option value="pending">Pending</option>
+        </select>
+      </label>
+      <label class="muted" style="font-size:.85rem">Group
+        <select id="groupFilter" aria-label="Filter by group"><option value="all">All</option></select>
+      </label>
+      <label class="muted" style="font-size:.85rem;display:inline-flex;align-items:center;gap:.35rem">
+        <input type="checkbox" id="targetsOnly"> My targets only
+      </label>
+    </div>
+    <div class="surface" style="border-radius:12px;overflow:auto;max-height:70vh">
+      <table>
+        <caption class="visually-hidden">World Cup 2026 teams with discipline rates per game</caption>
+        <thead>
+          <tr>
+            <th scope="col" style="text-align:left;padding:.6rem .7rem"><button data-sort="target" type="button">★</button></th>
+            <th scope="col" style="text-align:left;padding:.6rem .7rem"><button data-sort="n" type="button">Team</button></th>
+            <th scope="col" style="text-align:center;padding:.6rem .5rem"><button data-sort="g" type="button">Grp</button></th>
+            <th scope="col" style="text-align:right;padding:.6rem .5rem"><button data-sort="ca" type="button">Cards against</button></th>
+            <th scope="col" style="text-align:right;padding:.6rem .5rem"><button data-sort="fm" type="button">Fouls made</button></th>
+            <th scope="col" style="text-align:right;padding:.6rem .5rem"><button data-sort="cf" type="button">Cards for</button></th>
+            <th scope="col" style="text-align:left;padding:.6rem .5rem">Tier</th>
+            <th scope="col" style="text-align:left;padding:.6rem .7rem;min-width:180px">Note</th>
+          </tr>
+        </thead>
+        <tbody id="teamRows"></tbody>
+      </table>
+    </div>
+    <p class="faint" style="font-size:.78rem;margin-top:.6rem">Rates are per game from ScoutingStats country form. Tier runs off cards against: target 2.0 and above, mid 1.5 to 1.9, fade 1.4 and below. The flame marks a combustible side, 2.0 plus cards against and 12.5 plus fouls made.</p>
+  </section>
+
+  <!-- MATCHUPS -->
+  <section id="panel-matchups" role="tabpanel" aria-labelledby="tab-matchups" hidden>
+    <div class="surface" style="border-radius:12px;padding:1rem;margin-bottom:1rem">
+      <p class="muted" style="margin-top:0;font-size:.88rem">Team B is locked to the same group as Team A, so every pairing is a real group-stage fixture. This protects the same-match bet builder rule.</p>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:end">
+        <label style="display:flex;flex-direction:column;gap:.3rem;font-size:.85rem" class="muted">Team A
+          <select id="teamA" style="min-width:200px"></select>
+        </label>
+        <span class="display" aria-hidden="true" style="font-size:1.4rem;padding-bottom:.3rem">v</span>
+        <label style="display:flex;flex-direction:column;gap:.3rem;font-size:.85rem" class="muted">Team B (same group)
+          <select id="teamB" style="min-width:200px"></select>
+        </label>
+      </div>
+    </div>
+    <div id="heatOut"></div>
+  </section>
+
+  <!-- REFEREES -->
+  <section id="panel-refs" role="tabpanel" aria-labelledby="tab-refs" hidden>
+    <div class="surface" style="border-radius:12px;padding:1rem;margin-bottom:1rem">
+      <p class="muted" style="margin:0;font-size:.88rem">A working watchlist. Figures are blended estimates from public match data with varying sample sizes, several flagged small sample. The list fills out as FIFA confirms appointments. Appointments for the opener are due 24 to 48 hours before kick-off.</p>
+    </div>
+    <div class="surface" style="border-radius:12px;overflow:auto">
+      <table>
+        <caption class="visually-hidden">Referee watchlist with yellows per game</caption>
+        <thead><tr>
+          <th scope="col" style="text-align:left;padding:.6rem .7rem">Referee</th>
+          <th scope="col" style="text-align:left;padding:.6rem .5rem">Country</th>
+          <th scope="col" style="text-align:right;padding:.6rem .5rem">Yellows / game</th>
+          <th scope="col" style="text-align:left;padding:.6rem .7rem">Note</th>
+        </tr></thead>
+        <tbody id="refRows"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- GUIDE -->
+  <section id="panel-guide" role="tabpanel" aria-labelledby="tab-guide" hidden>
+    <div class="surface" style="border-radius:12px;padding:1.2rem;line-height:1.6;max-width:760px">
+      <h2 style="margin-top:0">How to use the desk</h2>
+      <p>This is a first-pass filter for player-bookings markets. It does not pick players. It tells you which fixtures and which teams carry the most card risk, so your per-fixture research starts in the right place.</p>
+
+      <h3>Tiers, off cards against</h3>
+      <ul>
+        <li><strong>Target</strong>, 2.0 cards against per game and above.</li>
+        <li><strong>Mid</strong>, 1.5 to 1.9.</li>
+        <li><strong>Fade</strong>, 1.4 and below.</li>
+        <li><strong>Combustible</strong> (flame), 2.0 plus cards against and 12.5 plus fouls made. High cards and high fouls together.</li>
+      </ul>
+
+      <h3>Matchup heat</h3>
+      <p>The heat score is transparent on purpose. For a fixture it is:</p>
+      <p class="surface-2" style="padding:.6rem .8rem;border-radius:8px;font-family:monospace;font-size:.85rem">heat = (avgCards / 3.1 &times; 6) + (avgFouls / 15.4 &times; 4), clamped 0 to 10</p>
+      <p>avgCards is the two-team average of cards against. avgFouls is the two-team average of fouls made. Cards are weighted 60 per cent, fouls 40 per cent. The divisors 3.1 and 15.4 are the highest cards-against and fouls-made in the field, so the score is normalised against the most extreme side in the tournament.</p>
+
+      <h3>Where the numbers come from</h3>
+      <p>Team rates are per-game figures from ScoutingStats country form, one card per team. Referee figures are blended estimates from public match data with varying sample sizes. Individual player names and stats are deliberately not baked in. The per-fixture player layer is built from confirmed starters once line-ups are known.</p>
+
+      <h3>Known limits</h3>
+      <ul>
+        <li>All 48 teams now carry form data. Sample sizes vary by team, from 12 games to 30. Smaller samples are noisier.</li>
+        <li>Cesar Ramos cannot referee Mexico on nationality. The watchlist notes this.</li>
+        <li>Referee per-game rates from short tournament samples will read high. Treat them as direction, not precision.</li>
+      </ul>
+      <p class="faint" style="font-size:.8rem">Your targets and notes are saved in this browser only, under the key wc26_desk_v2. Clearing site data will remove them.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="muted" style="max-width:1180px;margin:0 auto;padding:0 1.1rem 2rem;font-size:.78rem">
+  WC26 Bookings Desk. Team form via ScoutingStats. Built for research, not a betting guarantee. Stake responsibly.
+</footer>
+
+<script>
+// ---- DATA: auto-generated from ScoutingStats cards, hand spot-checked ----
+const TEAMS = [
+  {g:"A", n:"Czech Republic", c:"CZE", f:"🇨🇿", ca:2.2, fm:15.3, cf:1.8, fw:11.0, ga:1.15, gf:1.9, o25:60, btts:60, cs:8, sh:14.3, sot:5.2, gpg:3.05, games:20},
+  {g:"A", n:"Korea Republic", c:"KOR", f:"🇰🇷", ca:1.7, fm:11.4, cf:1.2, fw:10.7, ga:0.86, gf:1.95, o25:41, btts:32, cs:12, sh:11.7, sot:4.5, gpg:2.82, games:22},
+  {g:"A", n:"South Africa", c:"RSA", f:"🇿🇦", ca:1.6, fm:12.2, cf:1.7, fw:12.2, ga:0.76, gf:1.88, o25:52, btts:52, cs:11, sh:15.1, sot:5.5, gpg:2.64, games:25},
+  {g:"A", n:"Mexico", c:"MEX", f:"🇲🇽", ca:1.9, fm:13.3, cf:2.1, fw:12.4, ga:0.94, gf:1.38, o25:38, btts:38, cs:9, sh:11.4, sot:4.1, gpg:2.31, games:16},
+  {g:"B", n:"Bosnia and Herzegovina", c:"BIH", f:"🇧🇦", ca:1.9, fm:15.4, cf:2.5, fw:12.9, ga:1.53, gf:1.47, o25:53, btts:63, cs:5, sh:12.6, sot:4.2, gpg:3.0, games:19},
+  {g:"B", n:"Switzerland", c:"SUI", f:"🇨🇭", ca:1.9, fm:10.9, cf:1.6, fw:11.5, ga:1.32, gf:2.05, o25:58, btts:58, cs:6, sh:11.9, sot:4.8, gpg:3.37, games:19},
+  {g:"B", n:"Qatar", c:"QAT", f:"🇶🇦", ca:2.2, fm:10.7, cf:1.6, fw:12.9, ga:1.9, gf:1.24, o25:71, btts:62, cs:3, sh:8.9, sot:3.1, gpg:3.14, games:21},
+  {g:"B", n:"Canada", c:"CAN", f:"🇨🇦", ca:2.2, fm:14.0, cf:2.9, fw:14.7, ga:0.42, gf:1.25, o25:25, btts:17, cs:9, sh:11.2, sot:4.3, gpg:1.67, games:12},
+  {g:"C", n:"Brazil", c:"BRA", f:"🇧🇷", ca:2.3, fm:11.7, cf:1.7, fw:13.8, ga:1.0, gf:1.89, o25:53, btts:53, cs:7, sh:13.5, sot:4.8, gpg:2.89, games:19},
+  {g:"C", n:"Morocco", c:"MAR", f:"🇲🇦", ca:2.7, fm:13.6, cf:1.1, fw:16.3, ga:0.25, gf:2.71, o25:50, btts:25, cs:21, sh:16.1, sot:6.0, gpg:2.96, games:28},
+  {g:"C", n:"Haiti", c:"HAI", f:"🇭🇹", ca:1.4, fm:12.7, cf:1.5, fw:11.5, ga:1.07, gf:2.0, o25:64, btts:36, cs:7, sh:13.1, sot:5.3, gpg:3.07, games:14},
+  {g:"C", n:"Scotland", c:"SCO", f:"🏴󠁧󠁢󠁳󠁣󠁴󠁿", ca:2.6, fm:11.2, cf:1.5, fw:13.2, ga:1.26, gf:1.58, o25:63, btts:53, cs:6, sh:11.4, sot:4.5, gpg:2.84, games:19},
+  {g:"D", n:"Türkiye", c:"TUR", f:"🇹🇷", ca:1.9, fm:10.5, cf:2.5, fw:11.6, ga:1.11, gf:2.11, o25:63, btts:47, cs:8, sh:16.2, sot:5.2, gpg:3.21, games:19},
+  {g:"D", n:"United States", c:"USA", f:"🇺🇸", ca:1.4, fm:12.3, cf:1.8, fw:9.7, ga:1.69, gf:1.85, o25:69, btts:62, cs:2, sh:12.5, sot:5.2, gpg:3.54, games:13},
+  {g:"D", n:"Paraguay", c:"PAR", f:"🇵🇾", ca:1.8, fm:12.6, cf:2.1, fw:10.9, ga:0.89, gf:1.11, o25:44, btts:44, cs:8, sh:9.9, sot:3.8, gpg:2.0, games:18},
+  {g:"D", n:"Australia", c:"AUS", f:"🇦🇺", ca:1.3, fm:9.7, cf:1.1, fw:11.1, ga:0.76, gf:1.67, o25:43, btts:38, cs:9, sh:8.0, sot:3.2, gpg:2.43, games:21},
+  {g:"E", n:"Germany", c:"GER", f:"🇩🇪", ca:2.0, fm:11.1, cf:1.6, fw:9.9, ga:1.0, gf:2.63, o25:68, btts:47, cs:8, sh:17.8, sot:6.7, gpg:3.63, games:19},
+  {g:"E", n:"Curacao", c:"CUW", f:"🇨🇼", ca:2.2, fm:10.7, cf:1.5, fw:12.7, ga:1.29, gf:2.14, o25:50, btts:43, cs:6, sh:13.5, sot:5.7, gpg:3.43, games:14},
+  {g:"E", n:"Cote d'Ivoire", c:"CIV", f:"🇨🇮", ca:1.4, fm:11.2, cf:1.0, fw:9.2, ga:0.46, gf:1.73, o25:35, btts:19, cs:17, sh:11.8, sot:4.3, gpg:2.19, games:26},
+  {g:"E", n:"Ecuador", c:"ECU", f:"🇪🇨", ca:1.8, fm:13.6, cf:1.6, fw:10.6, ga:0.37, gf:0.89, o25:16, btts:32, cs:12, sh:11.1, sot:4.1, gpg:1.26, games:19},
+  {g:"F", n:"Sweden", c:"SWE", f:"🇸🇪", ca:2.6, fm:13.6, cf:1.8, fw:11.4, ga:1.45, gf:2.15, o25:70, btts:60, cs:4, sh:15.2, sot:6.0, gpg:3.6, games:20},
+  {g:"F", n:"Netherlands", c:"NED", f:"🇳🇱", ca:1.9, fm:9.6, cf:0.8, fw:12.8, ga:1.0, gf:2.53, o25:58, btts:58, cs:6, sh:15.5, sot:5.6, gpg:3.53, games:19},
+  {g:"F", n:"Japan", c:"JPN", f:"🇯🇵", ca:0.9, fm:12.8, cf:0.9, fw:9.1, ga:0.43, gf:2.52, o25:48, btts:19, cs:15, sh:12.3, sot:4.8, gpg:2.95, games:21},
+  {g:"F", n:"Tunisia", c:"TUN", f:"🇹🇳", ca:2.6, fm:12.8, cf:1.7, fw:11.7, ga:0.85, gf:1.41, o25:33, btts:37, cs:11, sh:9.9, sot:4.0, gpg:2.26, games:27},
+  {g:"G", n:"Belgium", c:"BEL", f:"🇧🇪", ca:2.7, fm:10.7, cf:1.6, fw:10.9, ga:1.16, gf:2.47, o25:58, btts:53, cs:6, sh:17.7, sot:6.5, gpg:3.63, games:19},
+  {g:"G", n:"Egypt", c:"EGY", f:"🇪🇬", ca:1.8, fm:11.4, cf:1.8, fw:11.0, ga:0.52, gf:1.52, o25:34, btts:31, cs:18, sh:9.4, sot:4.3, gpg:2.03, games:29},
+  {g:"G", n:"Iran", c:"IRN", f:"🇮🇷", ca:1.7, fm:8.4, cf:1.5, fw:7.8, ga:0.79, gf:1.84, o25:53, btts:42, cs:10, sh:10.5, sot:4.6, gpg:2.63, games:19},
+  {g:"G", n:"New Zealand", c:"NZL", f:"🇳🇿", ca:1.0, fm:7.5, cf:1.1, fw:7.4, ga:1.25, gf:2.38, o25:62, btts:38, cs:5, sh:10.1, sot:4.4, gpg:3.62, games:16},
+  {g:"H", n:"Spain", c:"ESP", f:"🇪🇸", ca:2.4, fm:11.5, cf:1.5, fw:10.0, ga:0.95, gf:2.63, o25:74, btts:47, cs:10, sh:19.9, sot:7.8, gpg:3.58, games:19},
+  {g:"H", n:"Cape Verde", c:"CPV", f:"🇨🇻", ca:2.2, fm:11.4, cf:1.8, fw:11.6, ga:1.05, gf:1.32, o25:36, btts:41, cs:9, sh:9.2, sot:3.4, gpg:2.36, games:22},
+  {g:"H", n:"Saudi Arabia", c:"KSA", f:"🇸🇦", ca:1.8, fm:8.7, cf:1.8, fw:11.8, ga:1.09, gf:1.0, o25:39, btts:43, cs:9, sh:10.1, sot:3.1, gpg:2.09, games:23},
+  {g:"H", n:"Uruguay", c:"URU", f:"🇺🇾", ca:1.9, fm:12.8, cf:2.2, fw:11.8, ga:0.78, gf:0.78, o25:22, btts:28, cs:10, sh:9.8, sot:2.6, gpg:1.56, games:18},
+  {g:"I", n:"France", c:"FRA", f:"🇫🇷", ca:1.7, fm:10.7, cf:2.0, fw:11.9, ga:1.11, gf:2.21, o25:68, btts:58, cs:7, sh:17.8, sot:6.5, gpg:3.32, games:19},
+  {g:"I", n:"Senegal", c:"SEN", f:"🇸🇳", ca:1.6, fm:11.3, cf:1.5, fw:10.5, ga:0.6, gf:2.03, o25:43, btts:37, cs:18, sh:12.4, sot:5.8, gpg:2.63, games:30},
+  {g:"I", n:"Norway", c:"NOR", f:"🇳🇴", ca:1.1, fm:8.5, cf:0.9, fw:10.8, ga:0.84, gf:3.05, o25:74, btts:53, cs:9, sh:16.8, sot:6.1, gpg:3.89, games:19},
+  {g:"I", n:"Iraq", c:"IRQ", f:"🇮🇶", ca:3.1, fm:11.9, cf:2.1, fw:10.9, ga:0.79, gf:1.11, o25:32, btts:42, cs:9, sh:8.0, sot:2.9, gpg:1.89, games:19},
+  {g:"J", n:"Argentina", c:"ARG", f:"🇦🇷", ca:2.4, fm:11.2, cf:1.4, fw:12.8, ga:0.53, gf:2.29, o25:53, btts:35, cs:10, sh:12.2, sot:5.2, gpg:2.82, games:17},
+  {g:"J", n:"Algeria", c:"ALG", f:"🇩🇿", ca:2.1, fm:12.1, cf:1.7, fw:11.3, ga:0.63, gf:2.33, o25:56, btts:41, cs:15, sh:9.7, sot:5.0, gpg:2.96, games:27},
+  {g:"J", n:"Austria", c:"AUT", f:"🇦🇹", ca:1.9, fm:12.9, cf:1.7, fw:10.4, ga:0.68, gf:2.32, o25:42, btts:47, cs:8, sh:14.2, sot:6.1, gpg:3.0, games:19},
+  {g:"J", n:"Jordan", c:"JOR", f:"🇯🇴", ca:1.4, fm:8.7, cf:1.5, fw:6.8, ga:1.17, gf:1.42, o25:50, btts:50, cs:8, sh:10.1, sot:4.2, gpg:2.58, games:24},
+  {g:"K", n:"Portugal", c:"POR", f:"🇵🇹", ca:2.0, fm:9.5, cf:1.8, fw:10.3, ga:1.0, gf:2.44, o25:61, btts:61, cs:5, sh:18.7, sot:6.2, gpg:3.44, games:18},
+  {g:"K", n:"Colombia", c:"COL", f:"🇨🇴", ca:2.2, fm:13.4, cf:1.4, fw:12.7, ga:1.16, gf:1.89, o25:68, btts:58, cs:6, sh:13.7, sot:5.6, gpg:3.05, games:19},
+  {g:"K", n:"Congo DR", c:"COD", f:"🇨🇩", ca:1.5, fm:14.1, cf:1.0, fw:11.4, ga:0.48, gf:1.36, o25:20, btts:28, cs:16, sh:9.0, sot:3.5, gpg:1.84, games:25},
+  {g:"K", n:"Uzbekistan", c:"UZB", f:"🇺🇿", ca:1.4, fm:9.8, cf:1.4, fw:8.1, ga:0.65, gf:1.25, o25:35, btts:30, cs:13, sh:12.4, sot:4.2, gpg:1.9, games:20},
+  {g:"L", n:"Croatia", c:"CRO", f:"🇭🇷", ca:1.3, fm:9.9, cf:1.8, fw:10.2, ga:1.05, gf:2.05, o25:58, btts:47, cs:7, sh:17.6, sot:6.5, gpg:3.11, games:19},
+  {g:"L", n:"Ghana", c:"GHA", f:"🇬🇭", ca:1.5, fm:12.6, cf:1.6, fw:13.1, ga:1.19, gf:1.52, o25:43, btts:43, cs:7, sh:9.3, sot:3.8, gpg:2.71, games:21},
+  {g:"L", n:"Panama", c:"PAN", f:"🇵🇦", ca:1.8, fm:11.7, cf:1.7, fw:10.9, ga:1.38, gf:1.69, o25:44, btts:56, cs:6, sh:12.1, sot:4.5, gpg:3.06, games:16},
+  {g:"L", n:"England", c:"ENG", f:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", ca:1.9, fm:8.9, cf:1.2, fw:11.4, ga:0.44, gf:2.39, o25:50, btts:22, cs:13, sh:16.9, sot:6.6, gpg:2.83, games:18},
+];
+
+// Referee watchlist. Figures are estimates with varying samples, several small.
+// ypg null where only a tournament total is known, not a per-game rate.
+const REFS = [
+  {n:"Michael Oliver", c:"England", ypg:6.0, sample:"small", note:"18 yellows in 3 World Cup games. Strict, blows early."},
+  {n:"Felix Zwayer", c:"Germany", ypg:4.75, sample:"small", note:"19 yellows in 4 at Euro 2024."},
+  {n:"Szymon Marciniak", c:"Poland", ypg:4.33, sample:"small", note:"13 yellows in 3 World Cup games."},
+  {n:"Wilton Sampaio", c:"Brazil", ypg:null, sample:"small", note:"14 yellows across the 2022 World Cup. Per game not derived."},
+  {n:"Ismail Elfath", c:"USA", ypg:null, sample:"small", note:"14 yellows and a red in 3 at 2022."},
+  {n:"Alireza Faghani", c:"Australia", ypg:null, sample:"small", note:"26 yellows across two prior tournaments."},
+  {n:"Cesar Ramos", c:"Mexico", ypg:null, sample:"n/a", note:"Cannot referee Mexico on nationality. Boca v Benfica under him produced three reds."},
+];
+
+const MAX_CA = 3.1, MAX_FM = 15.4;
+const STORE_KEY = "wc26_desk_v2", THEME_KEY = "wc26_desk_theme";
+
+// ---- state ----
+let state = loadState();
+function loadState(){
+  try{ const s = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; return {targets:s.targets||{}, notes:s.notes||{}}; }
+  catch(e){ return {targets:{}, notes:{}}; }
+}
+function saveState(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
+
+// ---- helpers ----
+function tierOf(ca){ if(ca==null) return "pending"; if(ca>=2.0) return "target"; if(ca>=1.5) return "mid"; return "fade"; }
+function tierLabel(t){ return {target:"Target", mid:"Mid", fade:"Fade", pending:"Pending"}[t]; }
+function isCombustible(t){ return t.ca!=null && t.fm!=null && t.ca>=2.0 && t.fm>=12.5; }
+function clamp(x,lo,hi){ return Math.max(lo, Math.min(hi, x)); }
+function heatScore(a,b){
+  const avgCards=(a.ca+b.ca)/2, avgFouls=(a.fm+b.fm)/2;
+  const score=(avgCards/MAX_CA*6)+(avgFouls/MAX_FM*4);
+  return {score:clamp(score,0,10), avgCards, avgFouls};
+}
+function heatColour(s){ if(s>=7) return "var(--danger)"; if(s>=5) return "var(--warn)"; if(s>=3) return "var(--accent-green)"; return "var(--text-muted)"; }
+function esc(s){ const d=document.createElement("div"); d.textContent=s; return d.innerHTML; }
+
+// ---- teams table ----
+let sortKey="ca", sortDir=-1;
+const $=(id)=>document.getElementById(id);
+
+function groupOptions(){
+  const groups=[...new Set(TEAMS.map(t=>t.g))].sort();
+  const gf=$("groupFilter");
+  groups.forEach(g=>{ const o=document.createElement("option"); o.value=g; o.textContent="Group "+g; gf.appendChild(o); });
+}
+
+function renderTeams(){
+  const q=$("search").value.trim().toLowerCase();
+  const tf=$("tierFilter").value, gf=$("groupFilter").value, only=$("targetsOnly").checked;
+  let rows=TEAMS.filter(t=>{
+    const tier=tierOf(t.ca);
+    if(q && !t.n.toLowerCase().includes(q)) return false;
+    if(tf!=="all" && tier!==tf) return false;
+    if(gf!=="all" && t.g!==gf) return false;
+    if(only && !state.targets[t.c]) return false;
+    return true;
+  });
+  rows.sort((a,b)=>{
+    let av,bv;
+    if(sortKey==="target"){ av=state.targets[a.c]?1:0; bv=state.targets[b.c]?1:0; }
+    else if(sortKey==="n"||sortKey==="g"){ av=a[sortKey]; bv=b[sortKey]; return sortDir*String(av).localeCompare(String(bv)); }
+    else { av=a[sortKey]==null?-Infinity:a[sortKey]; bv=b[sortKey]==null?-Infinity:b[sortKey]; }
+    return sortDir*(av-bv);
+  });
+  const tb=$("teamRows"); tb.innerHTML="";
+  rows.forEach(t=>{
+    const tier=tierOf(t.ca), comb=isCombustible(t);
+    const tr=document.createElement("tr");
+    const on=!!state.targets[t.c];
+    tr.innerHTML=
+      `<td style="padding:.35rem .7rem"><button class="star" aria-pressed="${on}" aria-label="${on?'Remove':'Add'} ${esc(t.n)} ${on?'from':'to'} targets" data-code="${t.c}">${on?'★':'☆'}</button></td>`+
+      `<td style="padding:.5rem .7rem"><span aria-hidden="true">${t.f}</span> ${esc(t.n)} ${comb?'<span title="Combustible" aria-label="Combustible">🔥</span>':''}</td>`+
+      `<td style="text-align:center" class="muted num">${t.g}</td>`+
+      `<td style="text-align:right" class="num"><strong>${t.ca==null?'—':t.ca.toFixed(1)}</strong></td>`+
+      `<td style="text-align:right" class="num">${t.fm==null?'—':t.fm.toFixed(1)}</td>`+
+      `<td style="text-align:right" class="num muted">${t.cf==null?'—':t.cf.toFixed(1)}</td>`+
+      `<td><span class="chip tier-${tier}">${tierLabel(tier)}</span></td>`+
+      `<td style="padding:.4rem .7rem"><textarea class="note-input" aria-label="Note for ${esc(t.n)}" data-code="${t.c}" placeholder="add note">${esc(state.notes[t.c]||'')}</textarea></td>`;
+    tb.appendChild(tr);
+  });
+}
+
+// ---- matchups ----
+function fillMatchupSelects(){
+  const a=$("teamA");
+  const valid=TEAMS.filter(t=>t.ca!=null).sort((x,y)=>x.n.localeCompare(y.n));
+  valid.forEach(t=>{ const o=document.createElement("option"); o.value=t.c; o.textContent=`${t.f} ${t.n} (${t.g})`; a.appendChild(o); });
+  a.value=valid[0].c;
+  syncTeamB();
+}
+function syncTeamB(){
+  const a=TEAMS.find(t=>t.c===$("teamA").value);
+  const b=$("teamB"); b.innerHTML="";
+  const mates=TEAMS.filter(t=>t.g===a.g && t.c!==a.c && t.ca!=null).sort((x,y)=>x.n.localeCompare(y.n));
+  mates.forEach(t=>{ const o=document.createElement("option"); o.value=t.c; o.textContent=`${t.f} ${t.n}`; b.appendChild(o); });
+  renderHeat();
+}
+function renderHeat(){
+  const a=TEAMS.find(t=>t.c===$("teamA").value);
+  const b=TEAMS.find(t=>t.c===$("teamB").value);
+  const out=$("heatOut");
+  if(!a||!b){ out.innerHTML='<p class="muted">Pick two teams.</p>'; return; }
+  const {score,avgCards,avgFouls}=heatScore(a,b);
+  const pct=(score/10*100).toFixed(0), col=heatColour(score);
+  const verdict = score>=7?"High card risk fixture":score>=5?"Above average card risk":score>=3?"Moderate":"Low card risk";
+  out.innerHTML=
+    `<div class="surface" style="border-radius:12px;padding:1.1rem">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap">
+        <h2 style="margin:0;font-size:1.2rem">${a.f} ${esc(a.n)} <span class="faint">v</span> ${b.f} ${esc(b.n)}</h2>
+        <div class="display" style="font-size:2rem;color:${col}">${score.toFixed(1)}<span class="faint" style="font-size:1rem">/10</span></div>
+      </div>
+      <p class="muted" style="margin:.2rem 0 .8rem;font-weight:600;color:${col}">${verdict}</p>
+      <div class="heatbar" role="img" aria-label="Heat ${score.toFixed(1)} out of 10"><div class="heatfill" style="width:${pct}%;background:${col}"></div></div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.7rem;margin-top:1rem">
+        ${cardCell("Avg cards against", avgCards.toFixed(2), "60% weight")}
+        ${cardCell("Avg fouls made", avgFouls.toFixed(2), "40% weight")}
+        ${cardCell(a.n+" tier", tierLabel(tierOf(a.ca)), `${a.ca.toFixed(1)} ca · ${a.fm.toFixed(1)} fm${isCombustible(a)?' · 🔥':''}`)}
+        ${cardCell(b.n+" tier", tierLabel(tierOf(b.ca)), `${b.ca.toFixed(1)} ca · ${b.fm.toFixed(1)} fm${isCombustible(b)?' · 🔥':''}`)}
+      </div>
+      <p class="faint" style="font-size:.78rem;margin:.9rem 0 0;font-family:monospace">heat = (${avgCards.toFixed(2)}/3.1 × 6) + (${avgFouls.toFixed(2)}/15.4 × 4) = ${score.toFixed(1)}</p>
+    </div>`;
+}
+function cardCell(label,val,sub){
+  return `<div class="surface-2" style="border-radius:10px;padding:.6rem .7rem">
+    <div class="faint" style="font-size:.72rem;text-transform:uppercase;letter-spacing:.04em">${esc(label)}</div>
+    <div class="display" style="font-size:1.25rem;margin:.1rem 0">${esc(String(val))}</div>
+    <div class="muted" style="font-size:.75rem">${esc(sub)}</div></div>`;
+}
+
+// ---- referees ----
+function renderRefs(){
+  const rows=[...REFS].sort((a,b)=>(b.ypg==null?-1:b.ypg)-(a.ypg==null?-1:a.ypg));
+  const tb=$("refRows"); tb.innerHTML="";
+  rows.forEach(r=>{
+    const tr=document.createElement("tr");
+    const flag=r.sample==="small"?'<span class="chip tier-mid" style="margin-left:.4rem">small sample</span>':(r.sample==="n/a"?'<span class="chip tier-pending" style="margin-left:.4rem">restricted</span>':'');
+    tr.innerHTML=
+      `<td style="padding:.55rem .7rem">${esc(r.n)}</td>`+
+      `<td class="muted">${esc(r.c)}</td>`+
+      `<td style="text-align:right" class="num"><strong>${r.ypg==null?'—':r.ypg.toFixed(2)}</strong></td>`+
+      `<td style="padding:.5rem .7rem" class="muted">${esc(r.note)}${flag}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+// ---- tabs ----
+const tabs=[...document.querySelectorAll('[role=tab]')];
+function selectTab(tab){
+  tabs.forEach(t=>{
+    const sel=t===tab;
+    t.setAttribute("aria-selected", sel);
+    t.tabIndex=sel?0:-1;
+    document.getElementById(t.getAttribute("aria-controls")).hidden=!sel;
+  });
+  tab.focus();
+}
+tabs.forEach((tab,i)=>{
+  tab.addEventListener("click",()=>selectTab(tab));
+  tab.addEventListener("keydown",e=>{
+    if(e.key==="ArrowRight"||e.key==="ArrowLeft"){
+      e.preventDefault();
+      const dir=e.key==="ArrowRight"?1:-1;
+      selectTab(tabs[(i+dir+tabs.length)%tabs.length]);
+    }
+  });
+});
+
+// ---- events ----
+$("teamRows").addEventListener("click",e=>{
+  const btn=e.target.closest(".star"); if(!btn) return;
+  const c=btn.dataset.code;
+  if(state.targets[c]) delete state.targets[c]; else state.targets[c]=true;
+  saveState(); renderTeams();
+});
+$("teamRows").addEventListener("input",e=>{
+  const ta=e.target.closest(".note-input"); if(!ta) return;
+  const c=ta.dataset.code; const v=ta.value;
+  if(v) state.notes[c]=v; else delete state.notes[c];
+  saveState();
+});
+["search","tierFilter","groupFilter","targetsOnly"].forEach(id=>{
+  $(id).addEventListener("input",renderTeams);
+});
+document.querySelectorAll("th [data-sort]").forEach(b=>{
+  b.addEventListener("click",()=>{
+    const k=b.dataset.sort;
+    if(sortKey===k) sortDir*=-1; else { sortKey=k; sortDir=(k==="n"||k==="g")?1:-1; }
+    renderTeams();
+  });
+});
+$("teamA").addEventListener("change",syncTeamB);
+$("teamB").addEventListener("change",renderHeat);
+
+// theme
+const themeToggle=$("themeToggle");
+function applyTheme(t){
+  document.documentElement.setAttribute("data-theme",t);
+  themeToggle.setAttribute("aria-pressed", t==="light");
+  $("themeLabel").textContent=t==="light"?"Light":"Dark";
+  themeToggle.querySelector("span[aria-hidden]").textContent=t==="light"?"☀️":"🌙";
+}
+themeToggle.addEventListener("click",()=>{
+  const next=document.documentElement.getAttribute("data-theme")==="light"?"dark":"light";
+  try{ localStorage.setItem(THEME_KEY,next); }catch(e){}
+  applyTheme(next);
+});
+applyTheme((()=>{ try{ return localStorage.getItem(THEME_KEY)||"dark"; }catch(e){ return "dark"; } })());
+
+// init
+groupOptions();
+renderTeams();
+fillMatchupSelects();
+renderRefs();
+</script>
+</body>
+</html>

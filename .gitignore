@@ -1,0 +1,19 @@
+# OS and editor
+.DS_Store
+Thumbs.db
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# Netlify
+.netlify/
+
+# Working data, not needed for deploy. The app has its data baked in.
+# Keep the large source images and CSVs out of the published site.
+data/*.JPG
+data/*.jpg
+data/*.png
+data/*.pdf
+data/*.csv
