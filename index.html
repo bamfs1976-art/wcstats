@@ -1972,12 +1972,23 @@ async function exportMatchupPNG(a,b){
       x.fillText(nm,cx+22,ry);
       x.textAlign="right"; x.fillStyle=riskHex(p.r); x.font=`700 16px ${disp}`; x.fillText(p.r.toFixed(2),cx+colW,ry); x.textAlign="left";
     });
+    // qualifying card leader (international form, drawn yellow-card icon)
+    const q=(typeof QUAL!=="undefined")?QUAL[team.c]:null;
+    if(q&&q.yc&&q.yc.p){
+      const yq=py+30+6*32+22;
+      x.fillStyle="#eab308"; roundRect(x,cx,yq-11,9,13,2); x.fill();
+      x.fillStyle="#94a3b8"; x.font=`600 11px ${body}`; x.fillText("QUAL CARD LEADER",cx+15,yq-1);
+      x.fillStyle="#e2e8f0"; x.font=`600 14px ${body}`;
+      let qn=q.yc.p; while(x.measureText(qn).width>colW-70) qn=qn.slice(0,-1);
+      x.fillText(qn,cx,yq+18);
+      x.textAlign="right"; x.fillStyle="#eab308"; x.font=`700 14px ${disp}`; x.fillText(q.yc.v.toFixed(2)+"/90",cx+colW,yq+18); x.textAlign="left";
+    }
   });
   // footer
   x.fillStyle="#475569"; x.font=`500 12px ${body}`;
   x.fillText(`heat = (${avgCards.toFixed(2)}/3.1 × 6) + (${avgFouls.toFixed(2)}/15.4 × 4) = ${score.toFixed(1)}`,P,H-44);
   x.fillStyle="#64748b"; x.font=`500 12px ${body}`;
-  x.fillText("Team form via ScoutingStats · player risk club form only · research, not a betting guarantee",P,H-22);
+  x.fillText("Club-form risk ranking + qualifying card leader · team form via ScoutingStats · research, not a betting guarantee",P,H-22);
   // download
   c.toBlob(blob=>{
     const url=URL.createObjectURL(blob), aEl=document.createElement("a");
