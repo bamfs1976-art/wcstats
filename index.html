@@ -77,6 +77,7 @@
     <button class="tabbtn" role="tab" id="tab-teams" aria-controls="panel-teams" aria-selected="true">Teams</button>
     <button class="tabbtn" role="tab" id="tab-matchups" aria-controls="panel-matchups" aria-selected="false" tabindex="-1">Matchups</button>
     <button class="tabbtn" role="tab" id="tab-refs" aria-controls="panel-refs" aria-selected="false" tabindex="-1">Referees</button>
+    <button class="tabbtn" role="tab" id="tab-tracker" aria-controls="panel-tracker" aria-selected="false" tabindex="-1">Tracker</button>
     <button class="tabbtn" role="tab" id="tab-guide" aria-controls="panel-guide" aria-selected="false" tabindex="-1">Guide</button>
   </div>
 
@@ -158,6 +159,50 @@
     </div>
   </section>
 
+  <!-- TRACKER -->
+  <section id="panel-tracker" role="tabpanel" aria-labelledby="tab-tracker" hidden>
+    <div id="trackerSummary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:.7rem;margin-bottom:1rem"></div>
+    <details class="surface" style="border-radius:12px;padding:1rem;margin-bottom:1rem" open>
+      <summary style="cursor:pointer;font-weight:600;font-family:'Bricolage Grotesque',sans-serif">Log a pick</summary>
+      <form id="pickForm" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.7rem;margin-top:.9rem;align-items:end">
+        <label style="display:flex;flex-direction:column;gap:.25rem;font-size:.8rem" class="muted">Fixture
+          <input id="pkFixture" required placeholder="Mexico v South Africa">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:.25rem;font-size:.8rem" class="muted">Selection
+          <input id="pkSelection" required placeholder="Edson Alvarez to be carded">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:.25rem;font-size:.8rem" class="muted">Market
+          <input id="pkMarket" placeholder="Player booking" list="mkts">
+          <datalist id="mkts"><option>Player booking</option><option>Team over cards</option><option>Match over cards</option><option>Both teams carded</option><option>Referee total cards</option></datalist>
+        </label>
+        <label style="display:flex;flex-direction:column;gap:.25rem;font-size:.8rem" class="muted">Odds (decimal)
+          <input id="pkOdds" type="number" step="0.01" min="1.01" placeholder="2.50">
+        </label>
+        <label style="display:flex;flex-direction:column;gap:.25rem;font-size:.8rem" class="muted">Stake
+          <input id="pkStake" type="number" step="0.01" min="0" placeholder="10">
+        </label>
+        <button type="submit" class="surface-2" style="border:1px solid var(--accent-green);color:var(--accent-green);border-radius:8px;padding:.55rem .9rem;font-weight:600;cursor:pointer">Add pick</button>
+      </form>
+    </details>
+    <div class="surface" style="border-radius:12px;overflow:auto">
+      <table>
+        <caption class="visually-hidden">Logged picks for the hit-rate trial</caption>
+        <thead><tr>
+          <th scope="col" style="text-align:left;padding:.6rem .7rem">Fixture</th>
+          <th scope="col" style="text-align:left;padding:.6rem .5rem">Selection</th>
+          <th scope="col" style="text-align:left;padding:.6rem .5rem">Market</th>
+          <th scope="col" style="text-align:right;padding:.6rem .5rem">Odds</th>
+          <th scope="col" style="text-align:right;padding:.6rem .5rem">Stake</th>
+          <th scope="col" style="text-align:left;padding:.6rem .5rem">Result</th>
+          <th scope="col" style="text-align:right;padding:.6rem .5rem">P/L</th>
+          <th scope="col" style="text-align:center;padding:.6rem .5rem"><span class="visually-hidden">Remove</span></th>
+        </tr></thead>
+        <tbody id="pickRows"></tbody>
+      </table>
+    </div>
+    <p class="faint" style="font-size:.78rem;margin-top:.6rem">Set a result to settle a pick. Hit-rate counts settled picks only, void excluded. Picks save to this browser under wc26_desk_v2.</p>
+  </section>
+
   <!-- GUIDE -->
   <section id="panel-guide" role="tabpanel" aria-labelledby="tab-guide" hidden>
     <div class="surface" style="border-radius:12px;padding:1.2rem;line-height:1.6;max-width:760px">
@@ -186,7 +231,7 @@
         <li>Cesar Ramos cannot referee Mexico on nationality. The watchlist notes this.</li>
         <li>Referee per-game rates from short tournament samples will read high. Treat them as direction, not precision.</li>
       </ul>
-      <p class="faint" style="font-size:.8rem">Your targets and notes are saved in this browser only, under the key wc26_desk_v2. Clearing site data will remove them.</p>
+      <p class="faint" style="font-size:.8rem">Your targets, notes and logged picks are saved in this browser only, under the key wc26_desk_v2. Clearing site data will remove them.</p>
     </div>
   </section>
 </main>
@@ -1521,8 +1566,8 @@ const STORE_KEY = "wc26_desk_v2", THEME_KEY = "wc26_desk_theme";
 // ---- state ----
 let state = loadState();
 function loadState(){
-  try{ const s = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; return {targets:s.targets||{}, notes:s.notes||{}}; }
-  catch(e){ return {targets:{}, notes:{}}; }
+  try{ const s = JSON.parse(localStorage.getItem(STORE_KEY)) || {}; return {targets:s.targets||{}, notes:s.notes||{}, picks:s.picks||[]}; }
+  catch(e){ return {targets:{}, notes:{}, picks:[]}; }
 }
 function saveState(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
 
@@ -1753,11 +1798,87 @@ themeToggle.addEventListener("click",()=>{
 });
 applyTheme((()=>{ try{ return localStorage.getItem(THEME_KEY)||"dark"; }catch(e){ return "dark"; } })());
 
+// ---- pick tracker ----
+const STATUSES=["pending","won","lost","void"];
+let pickSeq=Date.now();
+function pickPL(p){
+  if(p.status==="won") return (Number(p.stake)||0)*((Number(p.odds)||0)-1);
+  if(p.status==="lost") return -(Number(p.stake)||0);
+  return 0; // pending or void
+}
+function renderTracker(){
+  const picks=state.picks;
+  // summary
+  const settled=picks.filter(p=>p.status==="won"||p.status==="lost");
+  const won=picks.filter(p=>p.status==="won").length;
+  const lost=picks.filter(p=>p.status==="lost").length;
+  const hit=settled.length?(100*won/settled.length):null;
+  const staked=settled.reduce((s,p)=>s+(Number(p.stake)||0),0);
+  const pl=picks.reduce((s,p)=>s+pickPL(p),0);
+  const roi=staked?(100*pl/staked):null;
+  const plCol=pl>0?"var(--accent-green)":pl<0?"var(--danger)":"var(--text-secondary)";
+  $("trackerSummary").innerHTML=[
+    statCell("Picks", picks.length, `${picks.filter(p=>p.status==="pending").length} pending`),
+    statCell("Hit rate", hit==null?"—":hit.toFixed(0)+"%", `${won}W ${lost}L of ${settled.length}`),
+    statCell("Staked", staked.toFixed(2), "settled"),
+    statCell("P/L", (pl>=0?"+":"")+pl.toFixed(2), roi==null?"":`ROI ${roi>=0?"+":""}${roi.toFixed(1)}%`, plCol),
+  ].join("");
+  // rows
+  const tb=$("pickRows"); tb.innerHTML="";
+  if(!picks.length){ tb.innerHTML='<tr><td colspan="8" class="muted" style="padding:1rem;text-align:center">No picks logged yet. Add one above.</td></tr>'; return; }
+  [...picks].reverse().forEach(p=>{
+    const tr=document.createElement("tr");
+    const pl=pickPL(p), settled=(p.status==="won"||p.status==="lost");
+    const col=p.status==="won"?"var(--accent-green)":p.status==="lost"?"var(--danger)":"var(--text-secondary)";
+    const sel=STATUSES.map(s=>`<option value="${s}"${p.status===s?" selected":""}>${s}</option>`).join("");
+    tr.innerHTML=
+      `<td style="padding:.45rem .7rem">${esc(p.fixture)}</td>`+
+      `<td style="padding:.45rem .5rem">${esc(p.selection)}</td>`+
+      `<td style="padding:.45rem .5rem" class="muted">${esc(p.market||"")}</td>`+
+      `<td style="text-align:right" class="num">${p.odds?Number(p.odds).toFixed(2):"—"}</td>`+
+      `<td style="text-align:right" class="num">${p.stake?Number(p.stake).toFixed(2):"—"}</td>`+
+      `<td style="padding:.45rem .5rem"><select class="pk-status" data-id="${p.id}" aria-label="Result for ${esc(p.selection)}" style="padding:.3rem .4rem">${sel}</select></td>`+
+      `<td style="text-align:right" class="num" style="color:${col}">${settled?(pl>=0?"+":"")+pl.toFixed(2):"—"}</td>`+
+      `<td style="text-align:center"><button class="pk-del star" data-id="${p.id}" aria-label="Remove pick" title="Remove" style="color:var(--danger)">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+}
+function statCell(label,val,sub,col){
+  return `<div class="surface" style="border-radius:10px;padding:.6rem .8rem">
+    <div class="faint" style="font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">${esc(label)}</div>
+    <div class="display" style="font-size:1.4rem;margin:.1rem 0;color:${col||'var(--text-primary)'}">${esc(String(val))}</div>
+    <div class="muted" style="font-size:.72rem">${esc(sub||'')}</div></div>`;
+}
+$("pickForm").addEventListener("submit",e=>{
+  e.preventDefault();
+  const p={
+    id:"p"+(pickSeq++),
+    fixture:$("pkFixture").value.trim(),
+    selection:$("pkSelection").value.trim(),
+    market:$("pkMarket").value.trim(),
+    odds:$("pkOdds").value,
+    stake:$("pkStake").value,
+    status:"pending",
+  };
+  if(!p.fixture||!p.selection) return;
+  state.picks.push(p); saveState(); renderTracker();
+  e.target.reset(); $("pkFixture").focus();
+});
+$("pickRows").addEventListener("change",e=>{
+  const s=e.target.closest(".pk-status"); if(!s) return;
+  const p=state.picks.find(x=>x.id===s.dataset.id); if(p){ p.status=s.value; saveState(); renderTracker(); }
+});
+$("pickRows").addEventListener("click",e=>{
+  const b=e.target.closest(".pk-del"); if(!b) return;
+  state.picks=state.picks.filter(x=>x.id!==b.dataset.id); saveState(); renderTracker();
+});
+
 // init
 groupOptions();
 renderTeams();
 fillMatchupSelects();
 renderRefs();
+renderTracker();
 </script>
 </body>
 </html>

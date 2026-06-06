@@ -13,6 +13,7 @@ A single-file tool for World Cup 2026 player-bookings analysis. Team discipline 
 - **Teams** sortable table of cards against, fouls made and cards for per game, with tier badges and a combustible flag. Star your targets, add notes.
 - **Matchups** pick Team A, Team B is locked to the same group so every pairing is a real fixture. Transparent heat score out of 10. Below the heat, a per-fixture player layer ranks each squad by club-form booking risk (yellow rate per 90 weighted double plus fouls per 90), with club-league coverage flagged.
 - **Referees** a working watchlist, figures flagged where the sample is small.
+- **Tracker** log each pick with odds and stake, settle it won, lost or void, and see a running hit-rate, staked total, P/L and ROI. For the group-stage hit-rate trial.
 - **Guide** the method, the tiers, the heat formula and the known limits.
 
 ## Tiers and heat
