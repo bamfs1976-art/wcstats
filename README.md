@@ -36,7 +36,7 @@ Drag the project root to drop.netlify.com, or connect the repo. Publish director
 - Spot checked by hand against the source cards: Czech Republic, Mexico, South Africa and Iraq, all exact.
 - All 48 teams carry form data, including England (Group L, 1.9 cards against, 8.9 fouls made, mid tier).
 - Referee figures are blended estimates with varying samples, several small. The list fills out as FIFA confirms appointments.
-- The per-fixture player layer has two sources: 2025-26 club form (big-five leagues) for risk ranking, and qualifying-campaign leaders (most cards and most fouls per team) from the ScoutingStats cheat sheets, which cover all 48 teams including non-European-league players. Qualifying figures are a separate basis from the country-form team rates and never feed the tiers or heat.
+- The per-fixture player layer has two sources, both ScoutingStats: 2025-26 club form (broad league coverage, 1,163 players across all 48 nations, so it reaches non-European-league players such as Edson Álvarez at Fenerbahçe) for the risk ranking, and qualifying-campaign leaders (most cards and most fouls per team). Qualifying figures are a separate basis from the country-form team rates and never feed the tiers or heat.
 
 ## Working data and pipelines
 

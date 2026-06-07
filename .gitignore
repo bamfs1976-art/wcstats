@@ -26,3 +26,4 @@ data/*.heic
 data/*.heif
 data/*.pdf
 data/*.csv
+data/ss_players_raw.json
