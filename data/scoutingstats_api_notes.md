@@ -57,14 +57,26 @@ LEAGUES AVAILABLE (87 competitions, Sportmonks IDs)
   Persian Gulf Pro League 902, K League 1 1034, A-League 1356, plus domestic
   cups and super cups.
 
-CONFIRMED vs UNCONFIRMED
-  Confirmed: WC hub club and country scopes, the leagues= filter, sorting and
-  pagination across the full metric set.
-  Unconfirmed: querying a non-WC league hub end to end. It accepts the path but
-  needs that league's season_id, which is not exposed by this endpoint. The
-  leagues= filter on the WC hub only slices WC players, not the whole league.
-  To pull a full league you would need its season_id, likely from another site
-  call or the Sportmonks season catalogue.
+STANDALONE LEAGUES (the season_id question, cracked)
+GET https://scoutingstats.ai/api/league/{LEAGUE_ID}/player-stats?season_id={SID}
+  This is a DIFFERENT path from the hub. It returns the WHOLE league, not just
+  World Cup players. Same parameters and metric set as the hub endpoint.
+  To get a league's season_id: load its hub page
+    https://scoutingstats.ai/league/{LEAGUE_ID}/{slug}/player-stats
+  and read the season_id from the /api/league/{id}/player-stats call it fires.
+  Confirmed example: Premier League id 8, season_id 25583, 429 players.
+  Each league page also has /standings, /fixtures and /fixture-difficulty,
+  which point to further endpoints worth harvesting for wider work.
+
+  Recipe to harvest any league:
+    1. Navigate to /league/{id}/{slug}/player-stats in a real browser.
+    2. Capture the season_id from the network call.
+    3. Page /api/league/{id}/player-stats?season_id={SID}&per_page=100 ...
+
+CONFIRMED
+  WC hub club (1163) and country (922) scopes, the leagues= filter, standalone
+  league player-stats via /api/league/{id}/player-stats with the league's
+  season_id, sorting and pagination across the full metric set.
 
 WIDER FOOTBALL DATA IDEAS
   - Booking and foul models for any competition the platform exposes.
