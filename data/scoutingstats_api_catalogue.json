@@ -1,0 +1,857 @@
+{
+  "leagues_available": [
+    {
+      "id": 2,
+      "name": "Champions League",
+      "sub_type": "cup_international",
+      "players": 328
+    },
+    {
+      "id": 8,
+      "name": "Premier League",
+      "sub_type": "domestic",
+      "players": 171
+    },
+    {
+      "id": 24,
+      "name": "FA Cup",
+      "sub_type": "domestic_cup",
+      "players": 155
+    },
+    {
+      "id": 5,
+      "name": "Europa League",
+      "sub_type": "cup_international",
+      "players": 154
+    },
+    {
+      "id": 27,
+      "name": "Carabao Cup",
+      "sub_type": "domestic_cup",
+      "players": 141
+    },
+    {
+      "id": 82,
+      "name": "Bundesliga",
+      "sub_type": "domestic",
+      "players": 106
+    },
+    {
+      "id": 109,
+      "name": "DFB Pokal",
+      "sub_type": "domestic_cup",
+      "players": 100
+    },
+    {
+      "id": 301,
+      "name": "Ligue 1",
+      "sub_type": "domestic",
+      "players": 85
+    },
+    {
+      "id": 564,
+      "name": "La Liga",
+      "sub_type": "domestic",
+      "players": 84
+    },
+    {
+      "id": 2286,
+      "name": "Europa Conference League",
+      "sub_type": "cup_international",
+      "players": 79
+    },
+    {
+      "id": 570,
+      "name": "Copa Del Rey",
+      "sub_type": "domestic_cup",
+      "players": 73
+    },
+    {
+      "id": 384,
+      "name": "Serie A",
+      "sub_type": "domestic",
+      "players": 71
+    },
+    {
+      "id": 390,
+      "name": "Coppa Italia",
+      "sub_type": "domestic_cup",
+      "players": 68
+    },
+    {
+      "id": 307,
+      "name": "Coupe de France",
+      "sub_type": "domestic_cup",
+      "players": 68
+    },
+    {
+      "id": 1085,
+      "name": "AFC Champions League Elite",
+      "sub_type": "cup_international",
+      "players": 64
+    },
+    {
+      "id": 944,
+      "name": "Pro League",
+      "sub_type": "domestic",
+      "players": 50
+    },
+    {
+      "id": 600,
+      "name": "Super Lig",
+      "sub_type": "domestic",
+      "players": 49
+    },
+    {
+      "id": 950,
+      "name": "Kings Cup",
+      "sub_type": "domestic_cup",
+      "players": 44
+    },
+    {
+      "id": 779,
+      "name": "Major League Soccer",
+      "sub_type": "domestic",
+      "players": 43
+    },
+    {
+      "id": 9,
+      "name": "Championship",
+      "sub_type": "domestic",
+      "players": 41
+    },
+    {
+      "id": 72,
+      "name": "Eredivisie",
+      "sub_type": "domestic",
+      "players": 35
+    },
+    {
+      "id": 208,
+      "name": "Pro League",
+      "sub_type": "domestic",
+      "players": 34
+    },
+    {
+      "id": 78,
+      "name": "KNVB Beker",
+      "sub_type": "domestic_cup",
+      "players": 34
+    },
+    {
+      "id": 648,
+      "name": "Serie A",
+      "sub_type": "domestic",
+      "players": 33
+    },
+    {
+      "id": 1122,
+      "name": "Copa Libertadores",
+      "sub_type": "cup_international",
+      "players": 31
+    },
+    {
+      "id": 743,
+      "name": "Liga MX",
+      "sub_type": "domestic",
+      "players": 31
+    },
+    {
+      "id": 462,
+      "name": "Liga Portugal",
+      "sub_type": "domestic",
+      "players": 30
+    },
+    {
+      "id": 938,
+      "name": "Stars League",
+      "sub_type": "domestic",
+      "players": 29
+    },
+    {
+      "id": 1107,
+      "name": "CAF Champions League",
+      "sub_type": "cup_international",
+      "players": 28
+    },
+    {
+      "id": 654,
+      "name": "Copa do Brasil",
+      "sub_type": "domestic_cup",
+      "players": 28
+    },
+    {
+      "id": 468,
+      "name": "Taça De Portugal",
+      "sub_type": "domestic_cup",
+      "players": 26
+    },
+    {
+      "id": 262,
+      "name": "Chance Liga",
+      "sub_type": "domestic",
+      "players": 25
+    },
+    {
+      "id": 902,
+      "name": "Persian Gulf Pro League",
+      "sub_type": "domestic",
+      "players": 22
+    },
+    {
+      "id": 1116,
+      "name": "Copa Sudamericana",
+      "sub_type": "cup_international",
+      "players": 21
+    },
+    {
+      "id": 501,
+      "name": "Premiership",
+      "sub_type": "domestic",
+      "players": 21
+    },
+    {
+      "id": 806,
+      "name": "Premier League",
+      "sub_type": "domestic",
+      "players": 21
+    },
+    {
+      "id": 1328,
+      "name": "UEFA Super Cup",
+      "sub_type": "cup_international",
+      "players": 21
+    },
+    {
+      "id": 830,
+      "name": "Premier League",
+      "sub_type": "domestic",
+      "players": 20
+    },
+    {
+      "id": 23,
+      "name": "Community Shield",
+      "sub_type": "domestic_cup",
+      "players": 19
+    },
+    {
+      "id": 1088,
+      "name": "AFC Champions League Two",
+      "sub_type": "cup_international",
+      "players": 18
+    },
+    {
+      "id": 1356,
+      "name": "A-League Men",
+      "sub_type": "domestic",
+      "players": 17
+    },
+    {
+      "id": 959,
+      "name": "UAE Pro League",
+      "sub_type": "domestic",
+      "players": 17
+    },
+    {
+      "id": 636,
+      "name": "Liga Profesional de Fútbol",
+      "sub_type": "domestic",
+      "players": 17
+    },
+    {
+      "id": 271,
+      "name": "Superliga",
+      "sub_type": "domestic",
+      "players": 16
+    },
+    {
+      "id": 325,
+      "name": "Super League",
+      "sub_type": "domestic",
+      "players": 13
+    },
+    {
+      "id": 591,
+      "name": "Super League",
+      "sub_type": "domestic",
+      "players": 11
+    },
+    {
+      "id": 486,
+      "name": "Premier League",
+      "sub_type": "domestic",
+      "players": 11
+    },
+    {
+      "id": 1681,
+      "name": "Super League Play-offs",
+      "sub_type": "play-offs",
+      "players": 9
+    },
+    {
+      "id": 1798,
+      "name": "Supercopa do Brasil",
+      "sub_type": "domestic_cup",
+      "players": 9
+    },
+    {
+      "id": 304,
+      "name": "Ligue 2",
+      "sub_type": "domestic",
+      "players": 9
+    },
+    {
+      "id": 85,
+      "name": "2. Bundesliga",
+      "sub_type": "domestic",
+      "players": 8
+    },
+    {
+      "id": 74,
+      "name": "Eerste Divisie",
+      "sub_type": "domestic",
+      "players": 8
+    },
+    {
+      "id": 567,
+      "name": "La Liga 2",
+      "sub_type": "domestic",
+      "players": 8
+    },
+    {
+      "id": 492,
+      "name": "Russian Cup",
+      "sub_type": "domestic_cup",
+      "players": 7
+    },
+    {
+      "id": 465,
+      "name": "Liga Portugal 2",
+      "sub_type": "domestic",
+      "players": 7
+    },
+    {
+      "id": 244,
+      "name": "1. HNL",
+      "sub_type": "domestic",
+      "players": 7
+    },
+    {
+      "id": 181,
+      "name": "Admiral Bundesliga",
+      "sub_type": "domestic",
+      "players": 7
+    },
+    {
+      "id": 1034,
+      "name": "K League 1",
+      "sub_type": "domestic",
+      "players": 7
+    },
+    {
+      "id": 3537,
+      "name": "J1 100 Year Vision League",
+      "sub_type": "domestic",
+      "players": 7
+    },
+    {
+      "id": 1673,
+      "name": "Ligue 1 Play-offs",
+      "sub_type": "play-offs",
+      "players": 7
+    },
+    {
+      "id": 444,
+      "name": "Eliteserien",
+      "sub_type": "domestic",
+      "players": 7
+    },
+    {
+      "id": 1128,
+      "name": "Super Cup",
+      "sub_type": "domestic_cup",
+      "players": 6
+    },
+    {
+      "id": 453,
+      "name": "Ekstraklasa",
+      "sub_type": "domestic",
+      "players": 5
+    },
+    {
+      "id": 531,
+      "name": "Super Liga",
+      "sub_type": "domestic",
+      "players": 5
+    },
+    {
+      "id": 12,
+      "name": "League One",
+      "sub_type": "domestic",
+      "players": 5
+    },
+    {
+      "id": 387,
+      "name": "Serie B",
+      "sub_type": "domestic",
+      "players": 5
+    },
+    {
+      "id": 372,
+      "name": "Ligat ha'Al",
+      "sub_type": "domestic",
+      "players": 4
+    },
+    {
+      "id": 860,
+      "name": "Botola Pro",
+      "sub_type": "domestic",
+      "players": 4
+    },
+    {
+      "id": 603,
+      "name": "1. Lig",
+      "sub_type": "domestic",
+      "players": 4
+    },
+    {
+      "id": 88,
+      "name": "3. Liga",
+      "sub_type": "domestic",
+      "players": 3
+    },
+    {
+      "id": 229,
+      "name": "First League",
+      "sub_type": "domestic",
+      "players": 3
+    },
+    {
+      "id": 573,
+      "name": "Allsvenskan",
+      "sub_type": "domestic",
+      "players": 3
+    },
+    {
+      "id": 334,
+      "name": "NB I",
+      "sub_type": "domestic",
+      "players": 3
+    },
+    {
+      "id": 360,
+      "name": "Premier Division",
+      "sub_type": "domestic",
+      "players": 2
+    },
+    {
+      "id": 663,
+      "name": "Primera Division",
+      "sub_type": "domestic",
+      "players": 2
+    },
+    {
+      "id": 474,
+      "name": "Superliga",
+      "sub_type": "domestic",
+      "players": 2
+    },
+    {
+      "id": 555,
+      "name": "1. SNL",
+      "sub_type": "domestic",
+      "players": 2
+    },
+    {
+      "id": 540,
+      "name": "Niké Liga",
+      "sub_type": "domestic",
+      "players": 2
+    },
+    {
+      "id": 313,
+      "name": "National",
+      "sub_type": "domestic",
+      "players": 1
+    },
+    {
+      "id": 672,
+      "name": "Liga BetPlay",
+      "sub_type": "domestic",
+      "players": 1
+    },
+    {
+      "id": 989,
+      "name": "Super League",
+      "sub_type": "domestic",
+      "players": 1
+    },
+    {
+      "id": 770,
+      "name": "Primera Division",
+      "sub_type": "domestic",
+      "players": 1
+    },
+    {
+      "id": 292,
+      "name": "Veikkausliiga",
+      "sub_type": "domestic",
+      "players": 1
+    },
+    {
+      "id": 211,
+      "name": "Challenger Pro League",
+      "sub_type": "domestic",
+      "players": 1
+    },
+    {
+      "id": 1990,
+      "name": "Super Cup",
+      "sub_type": "domestic_cup",
+      "players": 1
+    },
+    {
+      "id": 220,
+      "name": "Premier Liga",
+      "sub_type": "domestic",
+      "players": 1
+    },
+    {
+      "id": 17,
+      "name": "Enterprise National League",
+      "sub_type": "domestic",
+      "players": 1
+    }
+  ],
+  "stat_categories": {
+    "Attacking": [
+      {
+        "full_label": "Goals",
+        "key": "goals",
+        "label": "G",
+        "p90": "goals_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Assists",
+        "key": "assists",
+        "label": "A",
+        "p90": "assists_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Expected Goals",
+        "key": "xg",
+        "label": "xG",
+        "p90": "xg_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Expected Goals on Target",
+        "key": "xgot",
+        "label": "xGOT",
+        "p90": "xgot_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Total Shots",
+        "key": "shots",
+        "label": "Sh",
+        "p90": "shots_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Shots on Target",
+        "key": "shots_on_target",
+        "label": "SoT",
+        "p90": "shots_on_target_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Chances Created",
+        "key": "chances_created",
+        "label": "ChC",
+        "p90": "chances_created_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Big Chances Created",
+        "key": "big_chances_created",
+        "label": "BC",
+        "p90": "big_chances_created_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Big Chances Missed",
+        "key": "big_chances_missed",
+        "label": "BCM",
+        "p90": "big_chances_missed_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Offsides",
+        "key": "offsides",
+        "label": "Off",
+        "p90": "offsides_p90",
+        "sortable": true
+      }
+    ],
+    "Defending": [
+      {
+        "full_label": "Tackles",
+        "key": "tackles",
+        "label": "Tkl",
+        "p90": "tackles_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Interceptions",
+        "key": "interceptions",
+        "label": "Int",
+        "p90": "interceptions_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Blocks",
+        "key": "blocks",
+        "label": "Blk",
+        "p90": "blocks_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Clearances",
+        "key": "clearances",
+        "label": "Clr",
+        "p90": "clearances_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Ball Recoveries",
+        "key": "ball_recoveries",
+        "label": "Rec",
+        "p90": "ball_recoveries_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Duels Won",
+        "key": "duels_won",
+        "label": "DW",
+        "p90": "duels_won_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Duels Won %",
+        "key": "duels_won_pct",
+        "label": "DW%",
+        "p90": null,
+        "sortable": true
+      },
+      {
+        "full_label": "Aerials Won",
+        "key": "aerials_won",
+        "label": "Aer",
+        "p90": "aerials_won_p90",
+        "sortable": true
+      }
+    ],
+    "Discipline": [
+      {
+        "full_label": "Fouls Committed",
+        "key": "fouls_committed",
+        "label": "Fls",
+        "p90": "fouls_committed_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Fouls Drawn",
+        "key": "fouls_drawn",
+        "label": "FD",
+        "p90": "fouls_drawn_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Yellow Cards",
+        "key": "yellow_cards",
+        "label": "YC",
+        "p90": null,
+        "sortable": true
+      },
+      {
+        "full_label": "Red Cards",
+        "key": "red_cards",
+        "label": "RC",
+        "p90": null,
+        "sortable": true
+      },
+      {
+        "full_label": "Penalties Won",
+        "key": "penalty_won",
+        "label": "PW",
+        "p90": null,
+        "sortable": true
+      },
+      {
+        "full_label": "Penalties Committed",
+        "key": "penalty_committed",
+        "label": "PC",
+        "p90": null,
+        "sortable": true
+      }
+    ],
+    "Dribbling": [
+      {
+        "full_label": "Successful Dribbles",
+        "key": "dribbles",
+        "label": "Drb",
+        "p90": "dribbles_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Dribble Attempts",
+        "key": "dribble_attempts",
+        "label": "DrAtt",
+        "p90": "dribble_attempts_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Dribble Success Rate",
+        "key": "dribble_success_rate",
+        "label": "Dr%",
+        "p90": null,
+        "sortable": true
+      },
+      {
+        "full_label": "Touches",
+        "key": "touches",
+        "label": "Tch",
+        "p90": "touches_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Dispossessed",
+        "key": "dispossessed",
+        "label": "Disp",
+        "p90": "dispossessed_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Possession Lost",
+        "key": "possession_lost",
+        "label": "PLost",
+        "p90": "possession_lost_p90",
+        "sortable": true
+      }
+    ],
+    "General": [
+      {
+        "full_label": "Appearances",
+        "key": "appearances",
+        "label": "Apps",
+        "p90": null,
+        "sortable": true
+      },
+      {
+        "full_label": "Minutes Played",
+        "key": "minutes_played",
+        "label": "Mins",
+        "p90": null,
+        "sortable": true
+      },
+      {
+        "full_label": "Average Rating",
+        "key": "rating",
+        "label": "Rtg",
+        "p90": null,
+        "sortable": true
+      }
+    ],
+    "Goalkeeper": [
+      {
+        "full_label": "Saves",
+        "key": "saves",
+        "label": "Sv",
+        "p90": "saves_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Saves Inside Box",
+        "key": "saves_insidebox",
+        "label": "SvBox",
+        "p90": "saves_insidebox_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Goals Conceded",
+        "key": "goals_conceded",
+        "label": "GC",
+        "p90": "goals_conceded_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Penalties Saved",
+        "key": "penalty_saved",
+        "label": "PSv",
+        "p90": null,
+        "sortable": true
+      }
+    ],
+    "Passing": [
+      {
+        "full_label": "Key Passes",
+        "key": "key_passes",
+        "label": "KP",
+        "p90": "key_passes_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Total Passes",
+        "key": "passes",
+        "label": "Pass",
+        "p90": "passes_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Accurate Passes",
+        "key": "passes_accurate",
+        "label": "AccP",
+        "p90": "passes_accurate_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Pass Accuracy %",
+        "key": "pass_accuracy",
+        "label": "P%",
+        "p90": null,
+        "sortable": true
+      },
+      {
+        "full_label": "Passes into Final Third",
+        "key": "passes_final_third",
+        "label": "FnlP",
+        "p90": "passes_final_third_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Crosses",
+        "key": "crosses",
+        "label": "Crs",
+        "p90": "crosses_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Long Balls",
+        "key": "long_balls",
+        "label": "LB",
+        "p90": "long_balls_p90",
+        "sortable": true
+      },
+      {
+        "full_label": "Through Balls",
+        "key": "through_balls",
+        "label": "TB",
+        "p90": "through_balls_p90",
+        "sortable": true
+      }
+    ]
+  }
+}
