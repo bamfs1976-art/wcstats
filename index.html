@@ -2899,9 +2899,10 @@ function renderGoals(){
 // ---- PNG export of the matchup card (pure canvas, no external assets) ----
 function heatHex(s){ return s>=7?'#ef4444':s>=5?'#f59e0b':s>=3?'#22c55e':'#64748b'; }
 function riskHex(r){ if(r==null)return'#64748b'; return r>=2.5?'#ef4444':r>=1.8?'#f59e0b':r>=1.2?'#22c55e':'#94a3b8'; }
+function goalHex(g){ if(g==null)return'#64748b'; return g>=0.7?'#ef4444':g>=0.45?'#f59e0b':g>=0.25?'#22c55e':'#94a3b8'; }
 async function exportMatchupPNG(a,b){
   try{ if(document.fonts&&document.fonts.ready) await document.fonts.ready; }catch(e){}
-  const W=1000,H=660,P=44, c=document.createElement("canvas");
+  const W=1000,H=860,P=44, c=document.createElement("canvas");
   c.width=W; c.height=H; const x=c.getContext("2d");
   const disp="'Bricolage Grotesque',sans-serif", body="'Hanken Grotesk',sans-serif";
   x.fillStyle="#0f172a"; x.fillRect(0,0,W,H);
@@ -2959,11 +2960,30 @@ async function exportMatchupPNG(a,b){
       x.textAlign="right"; x.fillStyle="#eab308"; x.font=`700 14px ${disp}`; x.fillText(q.yc.v.toFixed(2)+"/90",cx+colW,yq+18); x.textAlign="left";
     }
   });
+  // ---- goal threats section ----
+  const gx0=608;
+  x.strokeStyle="#1e293b"; x.lineWidth=1; x.beginPath(); x.moveTo(P,gx0); x.lineTo(W-P,gx0); x.stroke();
+  x.fillStyle="#94a3b8"; x.font=`600 14px ${body}`; x.fillText("GOAL THREATS · CLUB FORM",P,gx0+26);
+  const xfA=((a.gf+b.ga)/2), xfB=((b.gf+a.ga)/2), xTot=xfA+xfB;
+  x.textAlign="right"; x.fillStyle="#3b82f6"; x.font=`700 20px ${disp}`; x.fillText(xTot.toFixed(1)+" exp goals",W-P,gx0+26); x.textAlign="left";
+  const gy=gx0+56;
+  [a,b].forEach((team,ci)=>{ const cx=P+ci*(colW+30);
+    x.fillStyle="#f1f5f9"; x.font=`700 15px ${disp}`; x.fillText(team.n,cx,gy);
+    const tg=PLAYERS.filter(p=>p.t===team.c&&p.gt!=null).sort((m,n)=>n.gt-m.gt).slice(0,4);
+    if(!tg.length){ x.fillStyle="#64748b"; x.font=`500 13px ${body}`; x.fillText("No data",cx,gy+24); }
+    tg.forEach((p,i)=>{ const ry=gy+28+i*26;
+      x.fillStyle="#e2e8f0"; x.font=`600 14px ${body}`;
+      let nm=p.n; while(x.measureText(nm).width>colW-90) nm=nm.slice(0,-1);
+      x.fillText(nm,cx,ry);
+      x.fillStyle="#64748b"; x.font=`500 11px ${body}`; x.fillText(`${p.g90!=null?p.g90.toFixed(2):'—'} g · ${p.xg90!=null?p.xg90.toFixed(2):'—'} xG /90`,cx,ry+13);
+      x.textAlign="right"; x.fillStyle=goalHex(p.gt); x.font=`700 16px ${disp}`; x.fillText(p.gt.toFixed(2),cx+colW,ry+4); x.textAlign="left";
+    });
+  });
   // footer
   x.fillStyle="#475569"; x.font=`500 12px ${body}`;
-  x.fillText(`heat = (${avgCards.toFixed(2)}/3.1 × 6) + (${avgFouls.toFixed(2)}/15.4 × 4) = ${score.toFixed(1)}`,P,H-44);
+  x.fillText(`heat = (${avgCards.toFixed(2)}/3.1 × 6) + (${avgFouls.toFixed(2)}/15.4 × 4) = ${score.toFixed(1)}   ·   exp goals = ${xTot.toFixed(1)}`,P,H-44);
   x.fillStyle="#64748b"; x.font=`500 12px ${body}`;
-  x.fillText("Club-form risk ranking + qualifying card leader · team form via ScoutingStats · research, not a betting guarantee",P,H-22);
+  x.fillText("Bookings + goals, club form · team form via ScoutingStats · research, not a betting guarantee",P,H-22);
   // download
   c.toBlob(blob=>{
     const url=URL.createObjectURL(blob), aEl=document.createElement("a");
