@@ -64,11 +64,13 @@ def main():
             gt = g90
         else:
             gt = None
+        gtot = p.get("g")
         out.append({
             "t": code, "n": p.get("n"), "p": POS.get(p.get("pos"), p.get("pos") or ""),
             "cl": p.get("cl") or "", "r": risk, "y": yc90, "f": fc90,
             "ls": (mins < LOW_SAMPLE_MINUTES),
             "g90": g90, "xg90": xg90, "sot90": sot90, "gt": gt,
+            "g": (int(gtot) if isinstance(gtot, (int, float)) else None),
         })
 
     out.sort(key=lambda x: (x["t"], x["r"] is None, -(x["r"] or 0), x["n"] or ""))
@@ -91,6 +93,7 @@ def main():
             f't:{v(p["t"])}', f'n:{v(p["n"])}', f'p:{v(p["p"])}', f'cl:{v(p["cl"])}',
             f'r:{v(p["r"])}', f'y:{v(p["y"])}', f'f:{v(p["f"])}', f'ls:{v(p["ls"])}',
             f'g90:{v(p["g90"])}', f'xg90:{v(p["xg90"])}', f'sot90:{v(p["sot90"])}', f'gt:{v(p["gt"])}',
+            f'g:{v(p["g"])}',
         ]) + "},")
     lines.append("];")
     OUT.write_text("\n".join(lines), encoding="utf-8")
