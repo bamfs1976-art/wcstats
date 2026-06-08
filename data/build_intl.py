@@ -13,7 +13,7 @@ import json
 from pathlib import Path
 
 DATA = Path(__file__).resolve().parent
-SRC = DATA / "ss_intl_raw.json"
+SRC = DATA / "ss_country_full.json"
 TEAMFORM = DATA / "wc2026_team_form.json"
 OUT = DATA / "intl_array.js"
 LOW_MIN = 270
@@ -47,11 +47,21 @@ def main():
         app = p.get("app")
         yc90 = round(yc / mins * 90, 3) if (yc is not None and mins > 0) else None
         risk = round((yc90 * 2) + fc90, 3) if (yc90 is not None and fc90 is not None) else None
+        g90 = num(p.get("g90"))
+        xg90 = num(p.get("xg90"))
+        sot90 = num(p.get("sot90"))
+        if g90 is not None and xg90 is not None:
+            gt = round(0.6 * g90 + 0.4 * xg90, 3)
+        elif g90 is not None:
+            gt = g90
+        else:
+            gt = None
         out.append({
             "t": code, "n": p.get("n"),
             "p": POS.get(p.get("pos"), p.get("pos") or ""),
             "cl": (f"{app} caps" if app is not None else "") + (f" · {int(mins)} min" if mins else ""),
             "r": risk, "y": yc90, "f": fc90, "ls": (mins < LOW_MIN),
+            "g90": g90, "xg90": xg90, "sot90": sot90, "gt": gt,
         })
 
     out.sort(key=lambda x: (x["t"], x["r"] is None, -(x["r"] or 0), x["n"] or ""))
@@ -72,6 +82,7 @@ def main():
         lines.append("  {" + ",".join([
             f't:{v(p["t"])}', f'n:{v(p["n"])}', f'p:{v(p["p"])}', f'cl:{v(p["cl"])}',
             f'r:{v(p["r"])}', f'y:{v(p["y"])}', f'f:{v(p["f"])}', f'ls:{v(p["ls"])}',
+            f'g90:{v(p["g90"])}', f'xg90:{v(p["xg90"])}', f'sot90:{v(p["sot90"])}', f'gt:{v(p["gt"])}',
         ]) + "},")
     lines.append("];")
     OUT.write_text("\n".join(lines), encoding="utf-8")
