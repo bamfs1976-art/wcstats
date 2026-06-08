@@ -2796,8 +2796,8 @@ function renderPlayers(a,b){
         <h2 style="margin:0;font-size:1.05rem">Player booking risk</h2>
         <p class="muted" style="margin:.25rem 0 0;font-size:.8rem">${desc}</p>
       </div>
-      <div style="display:flex;gap:.4rem;flex:none;align-items:center">
-        <div role="tablist" aria-label="Player data source" style="display:flex;gap:.3rem">
+      <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+        <div role="tablist" aria-label="Player data source" style="display:flex;gap:.3rem;flex-wrap:wrap">
           ${modeBtn("modeClub","Club form",m==="club")}${modeBtn("modeIntl","International",m==="intl")}
         </div>
         <button id="exportBtn" class="surface-2" style="border:1px solid var(--accent-green);color:var(--accent-green);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">⬇ Export PNG</button>
@@ -2963,9 +2963,9 @@ function renderScorers(){
         <h2 style="margin:0;font-size:1.05rem">Golden Boot board</h2>
         <p class="muted" style="margin:.25rem 0 0;font-size:.8rem">Ranked by goal threat, goals per 90 and xG per 90 weighted 60/40, low-sample players excluded. ${m==="intl"?"National-team form 2026.":"2025-26 club season."} Season goals shown for context. A rate proxy, it does not model how far a team goes.</p>
       </div>
-      <div style="display:flex;gap:.4rem;flex:none;align-items:center;flex-wrap:wrap">
-        <div role="tablist" aria-label="Scorers view" style="display:flex;gap:.3rem">${vb("svTour","Tournament",v==="tournament")}${vb("svTeam","By team",v==="team")}${vb("svGroup","By group",v==="group")}</div>
-        <div role="tablist" aria-label="Scorers data source" style="display:flex;gap:.3rem">${modeBtn("smodeClub","Club form",m==="club")}${modeBtn("smodeIntl","International",m==="intl")}</div>
+      <div style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap;justify-content:flex-end">
+        <div role="tablist" aria-label="Scorers view" style="display:flex;gap:.3rem;flex-wrap:wrap">${vb("svTour","Tournament",v==="tournament")}${vb("svTeam","By team",v==="team")}${vb("svGroup","By group",v==="group")}</div>
+        <div role="tablist" aria-label="Scorers data source" style="display:flex;gap:.3rem;flex-wrap:wrap">${modeBtn("smodeClub","Club form",m==="club")}${modeBtn("smodeIntl","International",m==="intl")}</div>
       </div>
     </div>${body}`;
   $("svTour").addEventListener("click",()=>{ scorerView="tournament"; renderScorers(); });
