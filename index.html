@@ -218,6 +218,8 @@
         <button id="md1Results" class="surface-2" style="border:1px solid var(--accent-green);color:var(--accent-green);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">Load results (24)</button>
         <button id="md1Scores" class="surface-2" style="border:1px solid var(--accent-blue);color:var(--accent-blue);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">Load correct scores (24)</button>
         <button id="md1Both" class="surface-2" style="border:1px solid var(--border);color:var(--text-primary);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">Load both</button>
+        <button id="md1Export" class="surface-2" style="border:1px solid var(--accent-blue);color:var(--accent-blue);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">⬇ Export PNG</button>
+        <button id="md1Clear" class="surface-2" style="border:1px solid var(--danger);color:var(--danger);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">Clear MD1 picks</button>
       </div>
       <p id="md1Msg" class="muted" role="status" aria-live="polite" style="margin:0;font-size:.78rem;flex-basis:100%"></p>
     </div>
@@ -3292,9 +3294,65 @@ function loadMD1(which){
     ? `Added ${added} pick${added>1?"s":""} to the tracker.${dup?` ${dup} already loaded, skipped.`:""}`
     : (dup?"Those picks are already loaded.":"Nothing to add.");
 }
+function clearMD1(){
+  const fx=new Set(MD1_PREDICTIONS.map(m=>m.f));
+  const before=state.picks.length;
+  state.picks=state.picks.filter(p=>!(fx.has(p.fixture)&&(p.market==="Match result"||p.market==="Correct score")));
+  const removed=before-state.picks.length;
+  if(removed){ saveState(); renderTracker(); }
+  const msg=$("md1Msg");
+  if(msg) msg.textContent=removed?`Cleared ${removed} Matchday 1 pick${removed>1?"s":""}.`:"No Matchday 1 picks to clear.";
+}
+async function exportMD1PNG(){
+  try{ if(document.fonts&&document.fonts.ready) await document.fonts.ready; }catch(e){}
+  const disp="'Bricolage Grotesque',sans-serif", body="'Hanken Grotesk',sans-serif";
+  const W=1000, P=44, rowH=32, ty=150, H=ty+30+MD1_PREDICTIONS.length*rowH+62;
+  const c=document.createElement("canvas"); c.width=W; c.height=H; const x=c.getContext("2d");
+  x.fillStyle="#0f172a"; x.fillRect(0,0,W,H);
+  x.fillStyle="#22c55e"; x.fillRect(0,0,W,6);
+  x.textBaseline="alphabetic";
+  // header
+  x.fillStyle="#94a3b8"; x.font=`600 14px ${body}`; x.fillText("WC26 BOOKINGS DESK · MATCHDAY 1 PREDICTIONS",P,52);
+  x.fillStyle="#f1f5f9"; x.font=`700 34px ${disp}`; x.fillText("Matchday 1 — Prediction Card",P,96);
+  x.fillStyle="#94a3b8"; x.font=`500 15px ${body}`; x.fillText("24 group openers · model result + correct score · ranked by confidence",P,120);
+  // column headers
+  x.fillStyle="#64748b"; x.font=`600 11px ${body}`;
+  x.fillText("#",P,ty); x.fillText("FIXTURE",P+30,ty); x.fillText("RESULT",560,ty);
+  x.textAlign="center"; x.fillText("SCORE",745,ty); x.fillText("CONF",852,ty); x.textAlign="left";
+  x.strokeStyle="#1e293b"; x.lineWidth=1; x.beginPath(); x.moveTo(P,ty+8); x.lineTo(W-P,ty+8); x.stroke();
+  // rows
+  MD1_PREDICTIONS.forEach((m,i)=>{
+    const ry=ty+38+i*rowH;
+    if(i%2===0){ x.fillStyle="#15203a"; x.fillRect(P-12,ry-20,W-2*(P-12),rowH); }
+    x.fillStyle="#475569"; x.font=`700 13px ${body}`; x.fillText(String(i+1),P,ry);
+    x.fillStyle="#e2e8f0"; x.font=`600 15px ${body}`;
+    let nm=m.f; while(x.measureText(nm).width>505) nm=nm.slice(0,-1);
+    x.fillText(nm,P+30,ry);
+    const isDraw=m.r==="Draw";
+    x.fillStyle=isDraw?"#94a3b8":"#f1f5f9"; x.font=`700 15px ${body}`;
+    let rn=m.r; while(x.measureText(rn).width>175) rn=rn.slice(0,-1);
+    x.fillText(rn,560,ry);
+    x.textAlign="center"; x.fillStyle="#3b82f6"; x.font=`700 16px ${disp}`; x.fillText(m.s.replace("-","–"),745,ry); x.textAlign="left";
+    const tier=i<7?["HIGH","#16a34a"]:i<17?["MED","#d97706"]:["LOW","#64748b"];
+    x.fillStyle=tier[1]; roundRect(x,820,ry-15,64,21,10); x.fill();
+    x.fillStyle="#ffffff"; x.font=`700 11px ${body}`; x.textAlign="center"; x.fillText(tier[0],852,ry-1); x.textAlign="left";
+  });
+  // footer
+  x.fillStyle="#475569"; x.font=`500 12px ${body}`;
+  x.fillText("Scores in fixture order · model: xG = (team goals-for + opp goals-against)/2, tempered for quality",P,H-30);
+  x.fillStyle="#64748b"; x.font=`500 12px ${body}`;
+  x.fillText("For fun only · correct-score bets are designed to mostly miss · stake responsibly",P,H-12);
+  c.toBlob(blob=>{
+    const url=URL.createObjectURL(blob), aEl=document.createElement("a");
+    aEl.href=url; aEl.download="wc26-matchday1-predictions.png"; aEl.click();
+    setTimeout(()=>URL.revokeObjectURL(url),2000);
+  },"image/png");
+}
 $("md1Results").addEventListener("click",()=>loadMD1("result"));
 $("md1Scores").addEventListener("click",()=>loadMD1("score"));
 $("md1Both").addEventListener("click",()=>loadMD1("both"));
+$("md1Export").addEventListener("click",exportMD1PNG);
+$("md1Clear").addEventListener("click",clearMD1);
 
 // init
 groupOptions();
