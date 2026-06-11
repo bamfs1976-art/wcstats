@@ -75,7 +75,8 @@
 
 <main id="main" style="max-width:1180px;margin:0 auto;padding:1rem 1.1rem 4rem">
   <div role="tablist" aria-label="Sections" style="display:flex;gap:.3rem;border-bottom:1px solid var(--border);margin-bottom:1rem;flex-wrap:wrap">
-    <button class="tabbtn" role="tab" id="tab-teams" aria-controls="panel-teams" aria-selected="true">Teams</button>
+    <button class="tabbtn" role="tab" id="tab-home" aria-controls="panel-home" aria-selected="true">Home</button>
+    <button class="tabbtn" role="tab" id="tab-teams" aria-controls="panel-teams" aria-selected="false" tabindex="-1">Teams</button>
     <button class="tabbtn" role="tab" id="tab-matchups" aria-controls="panel-matchups" aria-selected="false" tabindex="-1">Matchups</button>
     <button class="tabbtn" role="tab" id="tab-goals" aria-controls="panel-goals" aria-selected="false" tabindex="-1">Goals</button>
     <button class="tabbtn" role="tab" id="tab-scorers" aria-controls="panel-scorers" aria-selected="false" tabindex="-1">Scorers</button>
@@ -85,8 +86,13 @@
     <button class="tabbtn" role="tab" id="tab-guide" aria-controls="panel-guide" aria-selected="false" tabindex="-1">Guide</button>
   </div>
 
+  <!-- HOME -->
+  <section id="panel-home" role="tabpanel" aria-labelledby="tab-home">
+    <div id="homeOut"></div>
+  </section>
+
   <!-- TEAMS -->
-  <section id="panel-teams" role="tabpanel" aria-labelledby="tab-teams">
+  <section id="panel-teams" role="tabpanel" aria-labelledby="tab-teams" hidden>
     <div style="display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:.8rem">
       <input id="search" type="search" placeholder="Search team" aria-label="Search team" style="flex:1;min-width:160px">
       <label class="muted" style="font-size:.85rem">Tier
@@ -3353,30 +3359,30 @@ $("pickRows").addEventListener("click",e=>{
 // ---- Matchday 1 model predictions (result + correct score), ranked by confidence ----
 // Scores are in fixture order (first team listed v second). r = predicted result.
 const MD1_PREDICTIONS=[
-  {f:"Germany v Curaçao", r:"Germany", s:"3-0"},
-  {f:"Spain v Cape Verde", r:"Spain", s:"3-0"},
-  {f:"Iraq v Norway", r:"Norway", s:"1-3"},
-  {f:"Algeria v Argentina", r:"Argentina", s:"1-2"},
-  {f:"Congo DR v Portugal", r:"Portugal", s:"0-2"},
-  {f:"Croatia v England", r:"England", s:"1-2"},
-  {f:"Qatar v Switzerland", r:"Switzerland", s:"1-2"},
-  {f:"Belgium v Egypt", r:"Belgium", s:"2-1"},
-  {f:"Austria v Jordan", r:"Austria", s:"2-1"},
-  {f:"Haiti v Scotland", r:"Scotland", s:"1-2"},
-  {f:"Iran v New Zealand", r:"Iran", s:"2-1"},
-  {f:"Bosnia & Herzegovina v Canada", r:"Canada", s:"1-2"},
-  {f:"Saudi Arabia v Uruguay", r:"Uruguay", s:"0-1"},
-  {f:"Sweden v Tunisia", r:"Sweden", s:"2-1"},
-  {f:"Colombia v Uzbekistan", r:"Colombia", s:"2-1"},
-  {f:"Australia v Türkiye", r:"Türkiye", s:"1-2"},
-  {f:"France v Senegal", r:"France", s:"2-1"},
-  {f:"Côte d'Ivoire v Ecuador", r:"Côte d'Ivoire", s:"1-0"},
-  {f:"Czech Republic v Korea Republic", r:"Draw", s:"1-1"},
-  {f:"Paraguay v USA", r:"Draw", s:"1-1"},
-  {f:"Mexico v South Africa", r:"Draw", s:"1-1"},
-  {f:"Netherlands v Japan", r:"Draw", s:"1-1"},
-  {f:"Brazil v Morocco", r:"Draw", s:"1-1"},
-  {f:"Ghana v Panama", r:"Ghana", s:"2-1"},
+  {a:"GER",b:"CUW",f:"Germany v Curaçao", r:"Germany", s:"3-0"},
+  {a:"ESP",b:"CPV",f:"Spain v Cape Verde", r:"Spain", s:"3-0"},
+  {a:"IRQ",b:"NOR",f:"Iraq v Norway", r:"Norway", s:"1-3"},
+  {a:"ALG",b:"ARG",f:"Algeria v Argentina", r:"Argentina", s:"1-2"},
+  {a:"COD",b:"POR",f:"Congo DR v Portugal", r:"Portugal", s:"0-2"},
+  {a:"CRO",b:"ENG",f:"Croatia v England", r:"England", s:"1-2"},
+  {a:"QAT",b:"SUI",f:"Qatar v Switzerland", r:"Switzerland", s:"1-2"},
+  {a:"BEL",b:"EGY",f:"Belgium v Egypt", r:"Belgium", s:"2-1"},
+  {a:"AUT",b:"JOR",f:"Austria v Jordan", r:"Austria", s:"2-1"},
+  {a:"HAI",b:"SCO",f:"Haiti v Scotland", r:"Scotland", s:"1-2"},
+  {a:"IRN",b:"NZL",f:"Iran v New Zealand", r:"Iran", s:"2-1"},
+  {a:"BIH",b:"CAN",f:"Bosnia & Herzegovina v Canada", r:"Canada", s:"1-2"},
+  {a:"KSA",b:"URU",f:"Saudi Arabia v Uruguay", r:"Uruguay", s:"0-1"},
+  {a:"SWE",b:"TUN",f:"Sweden v Tunisia", r:"Sweden", s:"2-1"},
+  {a:"COL",b:"UZB",f:"Colombia v Uzbekistan", r:"Colombia", s:"2-1"},
+  {a:"AUS",b:"TUR",f:"Australia v Türkiye", r:"Türkiye", s:"1-2"},
+  {a:"FRA",b:"SEN",f:"France v Senegal", r:"France", s:"2-1"},
+  {a:"CIV",b:"ECU",f:"Côte d'Ivoire v Ecuador", r:"Côte d'Ivoire", s:"1-0"},
+  {a:"CZE",b:"KOR",f:"Czech Republic v Korea Republic", r:"Draw", s:"1-1"},
+  {a:"PAR",b:"USA",f:"Paraguay v USA", r:"Draw", s:"1-1"},
+  {a:"MEX",b:"RSA",f:"Mexico v South Africa", r:"Draw", s:"1-1"},
+  {a:"NED",b:"JPN",f:"Netherlands v Japan", r:"Draw", s:"1-1"},
+  {a:"BRA",b:"MAR",f:"Brazil v Morocco", r:"Draw", s:"1-1"},
+  {a:"GHA",b:"PAN",f:"Ghana v Panama", r:"Ghana", s:"2-1"},
 ];
 function loadMD1(which){
   let added=0, dup=0;
@@ -3465,6 +3471,78 @@ renderScorers();
 fillIntelSelect();
 renderRefs();
 renderTracker();
+
+// ---- home / landing: hero of upcoming matches + stat summary ----
+function predForKey(k){ return MD1_PREDICTIONS.find(p=>[p.a,p.b].sort().join("|")===k); }
+function homeMatchCard(entry,featured){
+  const {k,fx}=entry, p=predForKey(k), cs=k.split("|");
+  const A=teamByCode(p?p.a:cs[0]), B=teamByCode(p?p.b:cs[1]);
+  if(!A||!B) return "";
+  const score=heatScore(A,B).score, col=heatColour(score);
+  const xgA=(A.gf+B.ga)/2, xgB=(B.gf+A.ga)/2;
+  const o25=Math.round((A.o25+B.o25)/2), btts=Math.round((A.btts+B.btts)/2);
+  const pick=p?`<span class="surface-2" style="border-radius:7px;padding:.25rem .55rem"><span class="faint">Model</span> <strong>${esc(p.r)}</strong> <span class="num" style="color:var(--accent-blue);font-weight:700">${esc(p.s.replace("-","–"))}</span></span>`:"";
+  const sz=featured?26:20;
+  return `<div class="surface" style="border-radius:14px;padding:${featured?'1.1rem 1.2rem':'.85rem 1rem'};display:flex;flex-direction:column;gap:.55rem;border-left:3px solid ${col}">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem">
+      <span class="chip surface-2" style="border:1px solid var(--border)">Grp ${A.g} · Match ${fx.m}</span>
+      <span class="display num" style="font-size:${featured?'1.5rem':'1.15rem'};color:${col};line-height:1">${score.toFixed(1)}<span class="faint" style="font-size:.5em;font-weight:600"> HEAT</span></span>
+    </div>
+    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:${featured?'1.25rem':'1.02rem'}">
+      <span style="display:inline-flex;align-items:center;gap:.4rem">${crest(A,sz)} ${esc(A.n)}</span>
+      <span class="faint" style="font-weight:400">v</span>
+      <span style="display:inline-flex;align-items:center;gap:.4rem">${crest(B,sz)} ${esc(B.n)}</span>
+    </div>
+    <div class="faint" style="font-size:.78rem">📅 ${fmtFixture(fx)} · ${esc(fx.v)}${fx.ref?` · 🧑‍⚖️ ${esc(fx.ref)}`:''}</div>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;font-size:.76rem;align-items:center">
+      <span class="surface-2" style="border-radius:7px;padding:.25rem .55rem">xG <strong class="num">${xgA.toFixed(1)}–${xgB.toFixed(1)}</strong></span>
+      <span class="surface-2" style="border-radius:7px;padding:.25rem .55rem">O2.5 <strong class="num">${o25}%</strong></span>
+      <span class="surface-2" style="border-radius:7px;padding:.25rem .55rem">BTTS <strong class="num">${btts}%</strong></span>
+      ${pick}
+    </div>
+  </div>`;
+}
+function homeStat(label,val,sub,col){
+  return `<div class="surface" style="border-radius:12px;padding:.7rem .85rem">
+    <div class="faint" style="font-size:.64rem;text-transform:uppercase;letter-spacing:.05em">${esc(label)}</div>
+    <div class="display" style="font-size:1.1rem;margin:.15rem 0;color:${col||'var(--text-primary)'};line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${val}</div>
+    <div class="muted" style="font-size:.72rem">${sub||''}</div></div>`;
+}
+function renderHome(){
+  const now=Date.now();
+  const all=Object.entries(FIXTURES).map(([k,fx])=>{ const d=shiftUTC(fx.d,0); return {k,fx,t:d?d.getTime():Infinity}; }).sort((a,b)=>a.t-b.t);
+  let up=all.filter(x=>x.t>=now-2.5*3600000);
+  if(!up.length) up=all;
+  const slate=up.slice(0,6), featured=slate[0];
+  const next24=up.filter(x=>x.t<now+24*3600000).length;
+  const hottest=up.map(x=>{ const cs=x.k.split("|"),A=teamByCode(cs[0]),B=teamByCode(cs[1]); return A&&B?{x,h:heatScore(A,B).score}:null; }).filter(Boolean).sort((a,b)=>b.h-a.h)[0];
+  const hotName=hottest?(()=>{ const cs=hottest.x.k.split("|"); return `${cs[0]} v ${cs[1]}`; })():"—";
+  const topThreat=playerSrc("club").filter(p=>p.gt!=null&&!p.ls).sort((a,b)=>b.gt-a.gt)[0];
+  const topRef=[...REFS].filter(r=>r.ypg!=null).sort((a,b)=>b.ypg-a.ypg)[0];
+  $("homeOut").innerHTML=
+    `<div class="surface" style="border-radius:16px;padding:1rem 1.2rem;margin-bottom:1rem;background:linear-gradient(135deg,var(--bg-secondary),var(--bg-tertiary))">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap">
+        <div><h2 style="margin:0;font-size:1.3rem">Next up at the World Cup</h2>
+        <p class="muted" style="margin:.2rem 0 0;font-size:.84rem">The upcoming slate with matchup heat, expected goals and the model's call, ready to go.</p></div>
+        <span class="chip surface-2" style="border:1px solid var(--border);font-size:.78rem">${next24} match${next24===1?"":"es"} · next 24h</span>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;margin-bottom:1rem">
+      ${homeStat("Hottest match",hotName,hottest?`heat ${hottest.h.toFixed(1)}/10`:"",hottest?heatColour(hottest.h):"")}
+      ${homeStat("Top goal threat",topThreat?esc(topThreat.n):"—",topThreat?`${topThreat.t} · gt ${topThreat.gt.toFixed(2)}`:"","var(--accent-green)")}
+      ${homeStat("Ref to watch",topRef?esc(topRef.n):"—",topRef?`${topRef.ypg.toFixed(1)} yel/game`:"","var(--warn)")}
+      ${homeStat("The field","48","teams · 12 groups")}
+    </div>
+    ${featured?homeMatchCard(featured,true):'<p class="muted">No upcoming fixtures.</p>'}
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.7rem;margin-top:.8rem">
+      ${slate.slice(1).map(e=>homeMatchCard(e,false)).join("")}
+    </div>
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:1.1rem">
+      ${[["matchups","Matchup heat"],["goals","Goal markets"],["scorers","Golden Boot"],["intel","Team intel"],["tracker","My picks"]].map(([id,lbl])=>`<button data-goto="tab-${id}" class="surface-2" style="border:1px solid var(--border);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer;color:var(--text-primary)">${lbl} →</button>`).join("")}
+    </div>`;
+  $("homeOut").querySelectorAll("[data-goto]").forEach(b=>b.addEventListener("click",()=>{ const t=document.getElementById(b.dataset.goto); if(t){ selectTab(t); t.focus(); } }));
+}
+renderHome();
 </script>
 </body>
 </html>
