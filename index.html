@@ -79,6 +79,7 @@
     <button class="tabbtn" role="tab" id="tab-matchups" aria-controls="panel-matchups" aria-selected="false" tabindex="-1">Matchups</button>
     <button class="tabbtn" role="tab" id="tab-goals" aria-controls="panel-goals" aria-selected="false" tabindex="-1">Goals</button>
     <button class="tabbtn" role="tab" id="tab-scorers" aria-controls="panel-scorers" aria-selected="false" tabindex="-1">Scorers</button>
+    <button class="tabbtn" role="tab" id="tab-intel" aria-controls="panel-intel" aria-selected="false" tabindex="-1">Intel</button>
     <button class="tabbtn" role="tab" id="tab-refs" aria-controls="panel-refs" aria-selected="false" tabindex="-1">Referees</button>
     <button class="tabbtn" role="tab" id="tab-tracker" aria-controls="panel-tracker" aria-selected="false" tabindex="-1">Tracker</button>
     <button class="tabbtn" role="tab" id="tab-guide" aria-controls="panel-guide" aria-selected="false" tabindex="-1">Guide</button>
@@ -163,6 +164,19 @@
   <!-- SCORERS -->
   <section id="panel-scorers" role="tabpanel" aria-labelledby="tab-scorers" hidden>
     <div id="scorerOut"></div>
+  </section>
+
+  <!-- INTEL -->
+  <section id="panel-intel" role="tabpanel" aria-labelledby="tab-intel" hidden>
+    <div class="surface" style="border-radius:12px;padding:1rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:1rem;align-items:end;justify-content:space-between">
+      <div style="min-width:0">
+        <p class="muted" style="margin:0 0 .5rem;font-size:.88rem">Per-team qualifying intel: goal, assist, booking and foul leaders, plus dead-ball duties. Qualifying campaign (last 10 games for USA, Canada, Mexico).</p>
+        <label style="display:flex;flex-direction:column;gap:.3rem;font-size:.85rem" class="muted">Team
+          <select id="intelTeam" style="min-width:220px"></select>
+        </label>
+      </div>
+    </div>
+    <div id="intelOut"></div>
   </section>
 
   <!-- REFEREES -->
@@ -2570,6 +2584,94 @@ const INTL = [
 
 // Referee watchlist. Figures are estimates with varying samples, several small.
 // ypg null where only a tournament total is known, not a per-game rate.
+// ---- per-team qualifying intel (scorers/assists/yellows/fouls per 90) + dead-ball duties ----
+// Source: qualifying-campaign stats thread (last 10 games for USA/CAN/MEX) and set-piece chart.
+// db = dead-ball takers read from the set-piece chart; treat as direction, sanity-check.
+const QINTEL={
+ MEX:{sc:[["R. Jiménez",2],["J. Vásquez",2],["B. Gutiérrez",2]],as:[["B. Gutiérrez",1],["L. Romo",1],["J. Gallardo",1]],yc:[["E. Álvarez",2],["E. Lira",2],["J. Sánchez",2]],fl:[["M. Chávez",2.3],["E. Lira",2.2],["R. Jiménez",1.4]],db:{pen:"Jiménez",sp:"Luis Chávez",ck:"Chávez"}},
+ RSA:{sc:[["J. Adams",2],["L. Foster",2],["O. Appollis",2]],as:[["O. Appollis",4],["S. Sithole",2],["A. Modiba",1]],yc:[["T. Mokoena",3],["K. Mudau",1],["A. Modiba",1]],fl:[["K. Mudau",1.5],["L. Foster",1.4],["T. Mokoena",1.3]],db:{pen:"Mokoena, Appollis",sp:"Appollis",ck:"Appollis, Mofokeng"}},
+ KOR:{sc:[["H.M Son",10],["J.S Lee",5],["K.I Lee",5]],as:[["K.I Lee",6],["H.M Son",4],["J.H Bae",4]],yc:[["Y.W Park",3],["S.M Moon",2],["T.S Lee",2]],fl:[["H.C Hwang",1.5],["I.B Hwang",1.2],["Y.W Park",1]],db:{pen:"Son, Hwang",sp:"Son",ck:"Lee Kang-in, Son"}},
+ CZE:{sc:[["P. Schick",5],["P. Sulc",2],["L. Krejcí",2]],as:[["J. Zeleny",3],["T. Chory",3],["L. Cerv",2]],yc:[["J. Zeleny",2],["V. Coufal",2],["T. Holes",1]],fl:[["T. Chory",2.9],["T. Soucek",2.1],["J. Zeleny",1.7]],db:{pen:"Schick, Soucek",sp:"Sulc",ck:"Provod, Coufal"}},
+ CAN:{sc:[["J. David",2],["J. Osorio",1],["I. Kone",1]],as:[["T. Oluwaseyi",2],["N. Sigur",1]],yc:[["R. Laryea",4],["D. Cornelius",3],["L. Millar",2]],fl:[["R. Laryea",2.28],["L. Millar",2.1],["T. Buchanan",1.8]],db:{pen:"Jonathan David",sp:"Davies",ck:"Davies, Eustáquio"}},
+ BIH:{sc:[["E. Dzeko",6],["H. Tabakovic",3],["B. Tahirovic",1]],as:[["K. Alajbegovic",2],["A. Memic",2],["B. Tahirovic",1]],yc:[["N. Katic",3],["A. Dedic",2],["B. Tahirovic",2]],fl:[["I. Sunjic",3.3],["I. Basic",2.5],["B. Tahirovic",2.2]],db:{pen:"Dzeko, Tabakovic",sp:"Dedic, Tahirovic",ck:"Dedic, Tahirovic"}},
+ QAT:{sc:[["Almoez Ali",12],["Akram Afif",4],["L. Mendes",2]],as:[["Akram Afif",11],["Almoez Ali",1],["B. Khoukhi",1]],yc:[["A. Fathi",4],["Almoez Ali",3],["Y. Abdurisag",3]],fl:[["J. Gaber",2],["A. Al-Ganehi",1.8],["Almoez Ali",1.1]],db:{pen:"Afif",sp:"Afif",ck:"Afif"}},
+ SUI:{sc:[["B. Embolo",4],["D. Ndoye",2],["J. Manzambi",2]],as:[["D. Ndoye",3],["R. Vargas",3],["R. Freuler",2]],yc:[["D. Ndoye",1],["M. Akanji",1],["S. Widmer",1]],fl:[["F. Rieder",1.6],["D. Ndoye",1.4],["R. Vargas",1.2]],db:{pen:"Xhaka, Embolo",sp:"Xhaka",ck:"Vargas, Rieder"}},
+ BRA:{sc:[["Raphinha",5],["Vini Jr",2],["Neymar",2]],as:[["Neymar",3],["B. Guimarães",2],["Raphinha",2]],yc:[["B. Guimarães",4],["Raphinha",4],["L. Paquetá",3]],fl:[["B. Guimarães",1.6],["Raphinha",1.5],["G. Magalhães",1.2]],db:{pen:"Raphinha, Igor Thiago",sp:"Raphinha",ck:"Bruno Guimarães"}},
+ MAR:{sc:[["A. El Kaabi",4],["I. Saibari",3],["A. Ounahi",2]],as:[["A. Hakimi",3],["A. Ounahi",2],["B. Diaz",2]],yc:[["A. Hakimi",2],["S. Amrabat",2],["B. Diaz",1]],fl:[["A. El Kaabi",2.1],["S. Amrabat",1.7],["B. El Khannouss",1.4]],db:{pen:"Hakimi, Brahim",sp:"Hakimi, Brahim",ck:"Brahim"}},
+ SCO:{sc:[["C. Adams",2],["R. Christie",2],["S. McTominay",2]],as:[["A. Robertson",2],["J. McGinn",1],["B. Gannon Doak",1]],yc:[["L. Ferguson",3],["R. Christie",2],["A. Hickey",1]],fl:[["L. Dykes",3.2],["L. Ferguson",3],["C. Adams",1.8]],db:{pen:"McGinn, Christie, McTominay",sp:"Robertson, McGinn",ck:"Robertson, McGinn"}},
+ HAI:{sc:[["D. Nazon",6],["L. Deedson",4],["D. Jean Jacques",2]],as:[["D. Jean Jacques",3],["M. Lacroix",2],["D. Nazon",2]],yc:[["C. Arcus",3],["D. Jean Jacques",2],["H. Delcroix",1]],fl:[["L. Pierre",2.4],["J R. Bellegarde",2.2],["C. Arcus",2]],db:{pen:"Nazon",sp:"Deedson, Bellegarde",ck:"Deedson, Bellegarde"}},
+ USA:{sc:[["F. Balogun",4],["H. Wright",2],["A. Freeman",2]],as:[["C. Pulisic",2],["R. Pepi",2],["M. Tillman",2]],yc:[["G. Reyna",2],["M. Robinson",2],["C. Richards",2]],fl:[["M. Tillman",2.5],["W. McKennie",1.8],["C. Pulisic",1.7]],db:{pen:"Pulisic",sp:"Pulisic",ck:"Pulisic, Reyna"}},
+ PAR:{sc:[["A. Sanabria",4],["J. Enciso",3],["M. Galarza",2]],as:[["D. Gomez",2],["A. Sanabria",1],["J. Cáceres",1]],yc:[["A. Cubas",4],["J. Alonso",4],["J. Cáceres",3]],fl:[["A. Cubas",2.3],["J. Cáceres",2],["D. Bobadilla",1.9]],db:{pen:"Enciso, Almirón",sp:"Enciso, Almirón",ck:"Gómez, Almirón"}},
+ AUS:{sc:[["T. Yengi",6],["J. Irvine",3],["N. Velupillay",3]],as:[["C. Metcalfe",2],["J. Bos",2],["C. Burgess",1]],yc:[["A. Circati",1],["C. Metcalfe",1],["C. Burgess",1]],fl:[["C. Metcalfe",1.8],["A. O'Neill",0.6],["H. Souttar",0.5]],db:{pen:"Hrustic",sp:"Irankunda, Hrustic",ck:"Hrustic"}},
+ TUR:{sc:[["K. Yildiz",3],["K. Aktürkoglu",3],["M. Demiral",2]],as:[["A. Güler",4],["H. Çalhanoglu",4],["O. Kökçü",2]],yc:[["I. Yüksek",3],["K. Aktürkoglu",3],["H. Çalhanoglu",2]],fl:[["B. Alper Yilmaz",3.8],["I. Yüksek",2.2],["S. Özcan",2]],db:{pen:"Çalhanoglu",sp:"Çalhanoglu, Güler",ck:"Çalhanoglu, Güler"}},
+ GER:{sc:[["N. Woltemade",5],["L. Sané",2],["J. Kimmich",2]],as:[["F. Wirtz",2],["D. Raum",2],["L. Sané",2]],yc:[["A. Rudiger",2],["J. Tah",1],["L. Goretzka",1]],fl:[["N. Woltemade",2.2],["L. Goretzka",1],["F. Wirtz",0.9]],db:{pen:"Kimmich, Havertz",sp:"Raum, Wirtz, Kimmich",ck:"Raum, Wirtz, Kimmich"}},
+ CUW:{sc:[["G. Kastaneer",5],["J. Bacuna",3],["K. Gorré",3]],as:[["J. Margaritha",3],["L. Bacuna",3],["K. Gorré",3]],yc:[["G. Kastaneer",2],["G. Roemeratoe",2],["S. Floranus",2]],fl:[["G. Roemeratoe",2.6],["G. Kastaneer",2.4],["J. Bacuna",2.3]],db:{pen:"J. Bacuna, L. Bacuna",sp:"Juninho Bacuna",ck:"J. Bacuna, L. Bacuna"}},
+ CIV:{sc:[["S. Fofana",3],["E. Guessand",2],["F. Kessie",2]],as:[["S. Adingra",3],["F. Kessie",2],["A. Diallo",1]],yc:[["A. Diallo",1],["E. Agbadou",1],["F. Kessie",1]],fl:[["I. Sangare",1.98],["O. Diakité",1.94],["E. Guessand",1.77]],db:{pen:"Sangaré, Kessié",sp:"Diomandé, Adingra",ck:"Diallo, Diomandé, Adingra"}},
+ ECU:{sc:[["E. Valencia",6],["G. Plata",2],["K. Páez",1]],as:[["M. Caicedo",3],["P. Vite",2],["A. Franco",2]],yc:[["M. Caicedo",3],["A. Preciado",3],["P. Hincapié",2]],fl:[["G. Plata",2.4],["M. Caicedo",2.1],["A. Preciado",1.9]],db:{pen:"Enner Valencia",sp:"Reasco, Páez",ck:"Caicedo, Plata, Páez"}},
+ NED:{sc:[["M. Depay",8],["D. Malen",4],["C. Gakpo",4]],as:[["C. Gakpo",4],["M. Depay",4],["D. Dumfries",3]],yc:[["J P. van Hecke",2],["M. Depay",1],["T. Reijnders",1]],fl:[["F. de Jong",1.3],["C. Gakpo",1.1],["V. van Dijk",1]],db:{pen:"Gakpo, Depay",sp:"de Jong",ck:"de Jong, Gakpo"}},
+ JPN:{sc:[["A. Ueda",8],["K. Ogawa",6],["D. Kamada",5]],as:[["J. Ito",10],["T. Kubo",8],["R. Doan",3]],yc:[["A. Seko",1],["D. Kamada",1],["D. Maeda",1]],fl:[["W. Endo",1.3],["D. Kamada",1.2],["K. Nakamura",1.1]],db:{pen:"Ueda",sp:"Kubo, Doan, Kamada",ck:"Kubo, Doan"}},
+ SWE:{sc:[["V. Gyökeres",4],["A. Elanga",2],["B. Nygren",1]],as:[["B. Nygren",2],["Y. Ayari",2],["G. Lagerbielke",1]],yc:[["J. Karlström",2],["A. Isak",1],["Y. Ayari",1]],fl:[["Y. Ayari",2.2],["I. Hien",1.8],["B. Nygren",1.7]],db:{pen:"Gyökeres",sp:"Elanga, Svanberg",ck:"Svensson, Elanga, Ayari"}},
+ TUN:{sc:[["E. Saad",3],["H. Mastouri",2],["H. Mejbri",1]],as:[["A. Abdi",3],["F. Chaouat",1],["H. Mejbri",1]],yc:[["A B. Slimane",1],["D. Bronn",1],["F. Chaouat",1]],fl:[["E. Saad",1.8],["H. Mastouri",1.4],["H. Mejbri",1]],db:{pen:"",sp:"",ck:""}},
+ BEL:{sc:[["K. De Bruyne",6],["J. Doku",5],["Y. Tielemans",3]],as:[["A. Saelemaekers",4],["C. De Ketelaere",3],["J. Doku",2]],yc:[["T. Meunier",2],["A. Saelemaekers",1],["A. Onana",1]],fl:[["T. Meunier",2.3],["N. Raskin",2.2],["A. Onana",1.3]],db:{pen:"Lukaku, De Ketelaere, De Bruyne",sp:"De Bruyne",ck:"De Bruyne, Tielemans"}},
+ EGY:{sc:[["M. Salah",9],["Trézéguet",5],["Zizo",2]],as:[["M. Salah",3],["Trézéguet",2],["Zizo",1]],yc:[["M. Ateya",4],["H. Fathy",2],["M. Saber",1]],fl:[["Trézéguet",1.4],["H. Abdelmaguid",1.4],["H. Fathy",1.3]],db:{pen:"Salah, Marmoush",sp:"Salah",ck:"Salah"}},
+ IRN:{sc:[["M. Taremi",5],["M. Mohebi",4],["M. Ghayedi",2]],as:[["M. Taremi",4],["H. Kanani",1],["S. Ghoddos",1]],yc:[["M. Mohebi",4],["S. Ghoddos",1],["H. Kanani",1]],fl:[["A. Jahanbakhsh",2.41],["A. Alipour",1.36],["A. Hosseinzadeh",1.24]],db:{pen:"Taremi",sp:"Taremi",ck:"Ghoddos, Ghayedi"}},
+ NZL:{sc:[["Chris Wood",9],["E. Just",4],["C. McCowatt",2]],as:[["S. Singh",1],["T. Payne",1],["J. Bell",1]],yc:[["M. Stamenic",2],["F. de Vries",2],["S. Singh",1]],fl:[["M. Stamenic",1.2],["S. Singh",0.8],["B. Old",0.5]],db:{pen:"Chris Wood",sp:"Singh, Garbett",ck:"de Vries, Payne"}},
+ ESP:{sc:[["M. Merino",6],["M. Oyarzabal",6],["F. Torres",2]],as:[["M. Oyarzabal",4],["L. Yamal",3],["M. Zubimendi",1]],yc:[["A. Baena",1],["P. Porro",1],["M. Merino",1]],fl:[["M. Merino",2.3],["M. Cucurella",1.4],["P. Porro",1.2]],db:{pen:"Oyarzabal, Yamal, Torres, Rodri",sp:"Pedri, Yamal",ck:"Pedri, Grimaldo"}},
+ CPV:{sc:[["D. Livramento",4],["D. Borges",2],["J. Monteiro",2]],as:[["D. Duarte",1],["D. Borges",1],["G. Rodrigues",1]],yc:[["D. Livramento",1],["D. Borges",1],["Stopira",1]],fl:[["J. Monteiro",1.1],["K. Pina",1],["D. Duarte",1]],db:{pen:"Rodrigues, Mendes",sp:"Cabral",ck:"Cabral"}},
+ KSA:{sc:[["F.A Brikan",5],["S.A Shehri",4],["M.A Juwayr",3]],as:[["M.A Juwayr",3],["S. Abdulhamid",2],["N.A Dawsari",1]],yc:[["S. Abdulhamid",4],["H.A Tambakti",3],["N.A Dawsari",3]],fl:[["S.A Shehri",1.8],["S. Abdulhamid",1.4],["N.A Dawsari",1.4]],db:{pen:"Al-Buraikan, Al-Dawsari",sp:"Al-Dawsari",ck:"Al-Dawsari"}},
+ URU:{sc:[["D. Núñez",5],["N. de la Cruz",3],["R. Aguirre",3]],as:[["M. Araújo",4],["N. de la Cruz",3],["F. Pellistri",2]],yc:[["M. Ugarte",5],["M. Olivera",4],["F. Valverde",3]],fl:[["M. Ugarte",1.8],["R. Bentancur",1.8],["F. Pellistri",1.5]],db:{pen:"Núñez, Valverde",sp:"Valverde, de la Cruz",ck:"Valverde, de la Cruz"}},
+ FRA:{sc:[["Mbappe",5],["Mateta",2],["Olise",2]],as:[["Mbappe",3],["Gusto",2],["T. Hernandez",1]],yc:[["Kone",2],["Rabiot",1],["Camavinga",1]],fl:[["Akilouche",2.1],["Olise",0.6],["Upamecano",0.4]],db:{pen:"Mbappe",sp:"Olise",ck:"Olise, Cherki"}},
+ SEN:{sc:[["S. Mané",5],["P. Sarr",4],["I. Sarr",3]],as:[["I. Ndiaye",2],["N. Jackson",2],["S. Mané",1]],yc:[["P. Gueye",2],["S. Mané",2],["H. Diarra",1]],fl:[["P. Sarr",1.8],["N. Jackson",1.3],["P. Gueye",1.2]],db:{pen:"Mané, Nicolás Jackson",sp:"Mané",ck:"Mané, Diatta"}},
+ NOR:{sc:[["E. Haaland",16],["A. Sørloth",5],["T. Aasgaard",4]],as:[["M. Ødegaard",7],["J. Ryerson",4],["A. Nusa",3]],yc:[["A. Sørloth",1],["DM. Wolfe",1],["E. Haaland",1]],fl:[["J. Ryerson",1.6],["DM. Wolfe",1.4],["P. Berg",1]],db:{pen:"Haaland",sp:"Ødegaard",ck:"Ødegaard, Berge"}},
+ IRQ:{sc:[["A. Hussein",8],["M. Ali",3],["AA. Hamadi",2]],as:[["A. Jasim",4],["AA. Ammari",4],["I. Bayesh",2]],yc:[["M. Doski",3],["A. Sher",2],["AA. Ammari",2]],fl:[["I. Bayesh",1.3],["M. Ali",1.2],["Z. Tahseen",1.2]],db:{pen:"Aymen Hussein",sp:"Al-Ammari, Jasim",ck:"Al-Ammari, Jasim"}},
+ ARG:{sc:[["L. Messi",8],["J. Alvarez",4],["L. Martinez",4]],as:[["L. Messi",3],["J. Alvarez",3],["E. Fernández",3]],yc:[["C. Romero",4],["L. Paredes",3],["N. Tagliafico",3]],fl:[["L. Martinez",2.3],["E. Fernández",1.6],["G. Lo Celso",1.5]],db:{pen:"Messi, Lautaro",sp:"Messi",ck:"Messi, De Paul"}},
+ ALG:{sc:[["M. Amoura",10],["A. Mandi",1],["A. Gouiri",1]],as:[["M. Amoura",4],["R. Mahrez",4],["A. Gouiri",1]],yc:[["R. Bensebaini",3],["A. Mandi",1],["A. Gouiri",1]],fl:[["R. Zerrouki",2.1],["H. Boudaoui",1.8],["N. Bentaleb",1.7]],db:{pen:"Mahrez, Bentaleb",sp:"Mahrez, Chaibi",ck:"Mahrez, Chaibi"}},
+ AUT:{sc:[["M. Arnautovic",8],["M. Gregoritsch",4],["M. Sabitzer",3]],as:[["M. Sabitzer",3],["S. Posch",2],["R. Schmid",2]],yc:[["D. Alaba",2],["P. Mwene",2],["S. Posch",2]],fl:[["S. Posch",2.4],["K. Laimer",2.3],["R. Schmid",2.1]],db:{pen:"Arnautovic, Sabitzer",sp:"Sabitzer",ck:"Alaba, Sabitzer"}},
+ JOR:{sc:[["A. Olwan",9],["M.A Tamari",7],["NA. Rawabdeh",2]],as:[["MA. Mardi",6],["E. Haddad",2],["M.A Tamari",2]],yc:[["NA. Rashdan",4],["MA. Mardi",3],["A. Nasib",2]],fl:[["MA. Taha",2.3],["NA. Rashdan",1.5],["MA. Mardi",1.5]],db:{pen:"Olwan",sp:"Al-Tamari, Olwan",ck:"Al-Tamari, Al-Mardi"}},
+ POR:{sc:[["C. Ronaldo",5],["J. Neves",3],["B. Fernandes",3]],as:[["J. Cancelo",2],["N. Semedo",2],["P. Neto",1]],yc:[["B. Fernandes",2],["B. Silva",1],["J. Cancelo",1]],fl:[["J. Felix",1.4],["B. Silva",1.2],["G. Ramos",1.2]],db:{pen:"Ronaldo, Bruno",sp:"Bruno, Nuno Mendes",ck:"Bruno, Nuno Mendes"}},
+ COD:{sc:[["C. Bakambu",4],["T. Bongonda",3],["Y. Wissa",3]],as:[["Y. Wissa",3],["C. Bakambu",2],["E. Kayembe",2]],yc:[["A. Masuaku",2],["C. Bakambu",2],["M. Elia",2]],fl:[["S. Moutoussamy",1.9],["C. Pickel",1.8],["M. Elia",1.5]],db:{pen:"Wissa, Bakambu",sp:"Wissa",ck:"Masuaku, Kakuta"}},
+ UZB:{sc:[["A. Fayzullayev",4],["E. Shomurodov",2],["O. Shukurov",1]],as:[["J. Iskanderov",2],["S. Nasrullaev",2],["E. Shomurodov",1]],yc:[["J. Masharipov",2],["R. Ashurmatov",2],["F. Sayfiev",1]],fl:[["O. Shukurov",2],["R. Ashurmatov",1.5],["A. Fayzullayev",1.2]],db:{pen:"Shomurodov",sp:"Masharipov, Fayzullaev",ck:"Masharipov, Fayzullaev"}},
+ COL:{sc:[["L. Díaz",7],["L. Suárez",4],["J. Rodríguez",3]],as:[["J. Rodríguez",7],["L. Díaz",3],["J. Arias",2]],yc:[["D. Sánchez",3],["J. Arias",3],["J. Córdoba",3]],fl:[["J. Córdoba",2.3],["R. Rios",2.2],["D. Muñoz",1.8]],db:{pen:"James, Luis Díaz",sp:"James",ck:"James"}},
+ ENG:{sc:[["H. Kane",8],["E. Eze",3],["A. Gordon",1]],as:[["D. Rice",4],["J. Bellingham",1],["M. Rashford",1]],yc:[["J. Bellingham",2],["A. Gordon",1],["E. Konsa",1]],fl:[["A. Gordon",1.9],["E. Anderson",1.9],["R. James",1.8]],db:{pen:"Kane",sp:"Rice, Saka",ck:"Rice, Saka"}},
+ CRO:{sc:[["A. Kramaric",6],["I. Perisic",4],["K. Jakic",2]],as:[["I. Perisic",4],["L. Modric",2],["J. Stanisic",2]],yc:[["A. Kramaric",1],["D. Caleta-Car",1],["M. Pasalic",1]],fl:[["A. Budimir",1],["J. Gvardiol",1],["K. Jakic",1]],db:{pen:"Modric, Budimir, Perisic",sp:"Modric",ck:"Modric, Perisic"}},
+ GHA:{sc:[["J. Ayew",7],["T. Partey",3],["I. Williams",2]],as:[["J. Ayew",7],["T. Partey",2],["G. Mensah",2]],yc:[["E. Owusu",2],["T. Partey",1],["K. Siso",1]],fl:[["E. Owusu",2.2],["T. Partey",1.7],["A. Seidu",1.5]],db:{pen:"Jordan Ayew",sp:"Jordan Ayew",ck:"Ayew, Sulemana"}},
+ PAN:{sc:[["J. Fajardo",3],["JL. Rodriguez",3],["C. Waterman",2]],as:[["A. Murillo",3],["E. Davis",2],["A. Londono",2]],yc:[["A. Godoy",4],["C. Martinez",2],["J. Cordoba",2]],fl:[["C. Harvey",2.6],["A. Godoy",2.2],["J. Fajardo",2]],db:{pen:"Ismael Díaz, Davis",sp:"Murillo, Carrasquilla",ck:"Davis, Carrasquilla"}},
+};
+function intelCard(title,arr,color){
+  const rows=(arr&&arr.length)
+    ? arr.map(([n,v],i)=>`<div style="display:flex;justify-content:space-between;gap:.5rem;padding:.32rem 0;${i?'border-top:1px solid var(--border)':''}"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(n)}</span><span class="num" style="font-weight:700;color:${color||'var(--text-primary)'}">${v}</span></div>`).join("")
+    : `<div class="faint" style="padding:.32rem 0;font-size:.8rem">No data</div>`;
+  return `<div class="surface" style="border-radius:12px;padding:.7rem 1rem">
+    <div class="faint" style="font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.25rem">${esc(title)}</div>${rows}</div>`;
+}
+function dbRow(label,val){ return val?`<div style="display:flex;gap:.6rem;padding:.32rem 0;border-top:1px solid var(--border)"><span class="faint" style="min-width:84px;font-size:.78rem;flex:none">${esc(label)}</span><span style="font-weight:600">${esc(val)}</span></div>`:''; }
+function renderIntel(){
+  const code=$("intelTeam").value, t=TEAMS.find(x=>x.c===code), q=QINTEL[code];
+  const out=$("intelOut");
+  if(!q){ out.innerHTML=`<p class="muted" style="padding:.5rem">No intel for this team yet.</p>`; return; }
+  const db=q.db||{}, hasDB=db.pen||db.sp||db.ck;
+  out.innerHTML=
+    `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:.8rem">
+      ${intelCard("Top scorers · quals",q.sc,"var(--accent-green)")}
+      ${intelCard("Assists",q.as,"var(--accent-blue)")}
+      ${intelCard("Yellow cards",q.yc,"var(--warn)")}
+      ${intelCard("Fouls per 90",q.fl,"var(--text-primary)")}
+    </div>`+
+    (hasDB?`<div class="surface" style="border-radius:12px;padding:.7rem 1rem;margin-top:.8rem">
+      <div class="faint" style="font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.1rem">Dead-ball duties</div>
+      ${dbRow("Penalties",db.pen)}${dbRow("Set pieces",db.sp)}${dbRow("Corners",db.ck)}
+      <p class="faint" style="margin:.5rem 0 0;font-size:.72rem">Read from the set-piece chart, direction not gospel. Sanity-check before betting.</p>
+    </div>`:"")+
+    `<p class="faint" style="font-size:.74rem;margin:.7rem 0 0">${t?esc(t.n)+", group "+t.g+". ":""}Qualifying-campaign leaders (last 10 games for USA, Canada, Mexico). Goal and assist tallies are qualifying totals, fouls are per 90.</p>`;
+}
+function fillIntelSelect(){
+  const sel=$("intelTeam");
+  [...TEAMS].sort((x,y)=>x.n.localeCompare(y.n)).forEach(t=>{ const o=document.createElement("option"); o.value=t.c; o.textContent=`${t.f} ${t.n} (${t.g})`; sel.appendChild(o); });
+  sel.value="MEX";
+  sel.addEventListener("change",renderIntel);
+  renderIntel();
+}
+
 const REFS = [
   {n:"Michael Oliver", c:"England", ypg:6.0, sample:"small", note:"18 yellows in 3 World Cup games. Strict, blows early."},
   {n:"Felix Zwayer", c:"Germany", ypg:4.75, sample:"small", note:"19 yellows in 4 at Euro 2024."},
@@ -3360,6 +3462,7 @@ renderTeams();
 fillMatchupSelects();
 fillGoalSelects();
 renderScorers();
+fillIntelSelect();
 renderRefs();
 renderTracker();
 </script>
