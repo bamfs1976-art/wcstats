@@ -3104,93 +3104,130 @@ function renderScorers(){
 }
 
 // ---- PNG export of the matchup card (pure canvas, no external assets) ----
-function heatHex(s){ return s>=7?'#ef4444':s>=5?'#f59e0b':s>=3?'#22c55e':'#64748b'; }
-function riskHex(r){ if(r==null)return'#64748b'; return r>=2.5?'#ef4444':r>=1.8?'#f59e0b':r>=1.2?'#22c55e':'#94a3b8'; }
-function goalHex(g){ if(g==null)return'#64748b'; return g>=0.7?'#ef4444':g>=0.45?'#f59e0b':g>=0.25?'#22c55e':'#94a3b8'; }
+// ---- WC26 DESK card brand: palette + shared chrome for PNG exports ----
+const BRAND={
+  name:"WC26 DESK", tag:"WORLD CUP 2026 · STATS & ANGLES",
+  bg0:"#0a0e1c", bg1:"#16203c", ink:"#eef3ff", sub:"#9fb0cf", faint:"#5e6d8c",
+  panel:"#111a31", panelHi:"#16203c", line:"#28344f",
+  a1:"#c8ff4d", a2:"#2fe6c4", hot:"#ff3d6e", warn:"#ffb03a", good:"#34e08a", blue:"#4d8dff"
+};
+function heatHex(s){ return s>=7?BRAND.hot:s>=5?BRAND.warn:s>=3?BRAND.good:BRAND.faint; }
+function riskHex(r){ if(r==null)return BRAND.faint; return r>=2.5?BRAND.hot:r>=1.8?BRAND.warn:r>=1.2?BRAND.good:BRAND.sub; }
+function goalHex(g){ if(g==null)return BRAND.faint; return g>=0.7?BRAND.hot:g>=0.45?BRAND.warn:g>=0.25?BRAND.good:BRAND.sub; }
+function accentGrad(x,x0,y0,x1,y1){ const g=x.createLinearGradient(x0,y0,x1,y1); g.addColorStop(0,BRAND.a1); g.addColorStop(1,BRAND.a2); return g; }
+function brandBg(x,W,H){
+  const g=x.createLinearGradient(0,0,W*0.65,H); g.addColorStop(0,BRAND.bg0); g.addColorStop(1,BRAND.bg1);
+  x.fillStyle=g; x.fillRect(0,0,W,H);
+  const rg=x.createRadialGradient(W,0,30,W,0,W*0.75); rg.addColorStop(0,"rgba(47,230,196,0.10)"); rg.addColorStop(1,"rgba(47,230,196,0)");
+  x.fillStyle=rg; x.fillRect(0,0,W,H);
+}
+function brandHeader(x,W,P,label){
+  const disp="'Bricolage Grotesque',sans-serif", body="'Hanken Grotesk',sans-serif";
+  x.fillStyle=accentGrad(x,0,0,W,0); x.fillRect(0,0,W,5);
+  const by=24, bs=40;
+  x.fillStyle=accentGrad(x,P,by,P+bs,by+bs); roundRect(x,P,by,bs,bs,11); x.fill();
+  x.fillStyle=BRAND.bg0; x.textAlign="center"; x.textBaseline="middle"; x.font=`800 18px ${disp}`; x.fillText("26",P+bs/2,by+bs/2+1);
+  x.textAlign="left"; x.textBaseline="alphabetic";
+  const wx=P+bs+13;
+  x.font=`800 25px ${disp}`; x.fillStyle=BRAND.ink; x.fillText("WC26",wx,by+19);
+  x.fillStyle=BRAND.a1; x.fillText(" DESK",wx+x.measureText("WC26").width,by+19);
+  x.fillStyle=BRAND.faint; x.font=`700 10px ${body}`; x.fillText(BRAND.tag,wx,by+35);
+  if(label){ const L=label.toUpperCase(); x.font=`800 12px ${body}`; const tw=x.measureText(L).width, pw=tw+26, px=W-P-pw, py=by+6;
+    x.fillStyle="rgba(47,230,196,0.12)"; roundRect(x,px,py,pw,28,14); x.fill();
+    x.strokeStyle=BRAND.a2; x.lineWidth=1.3; roundRect(x,px,py,pw,28,14); x.stroke();
+    x.fillStyle=BRAND.a2; x.textAlign="center"; x.fillText(L,px+pw/2,py+19); x.textAlign="left"; }
+  return by+bs+16;
+}
+function brandFooter(x,W,H,P,note){
+  const body="'Hanken Grotesk',sans-serif";
+  x.strokeStyle=BRAND.line; x.lineWidth=1; x.beginPath(); x.moveTo(P,H-48); x.lineTo(W-P,H-48); x.stroke();
+  x.fillStyle=BRAND.a1; roundRect(x,P,H-39,7,8,2); x.fill();
+  x.fillStyle=BRAND.sub; x.font=`800 13px ${body}`; x.fillText("WC26 DESK",P+13,H-31);
+  x.fillStyle=BRAND.faint; x.font=`500 11px ${body}`; x.fillText(note||"Built for research, not a betting guarantee.",P,H-13);
+  x.textAlign="right"; x.fillStyle=BRAND.faint; x.fillText("18+ · Stake responsibly",W-P,H-31); x.textAlign="left";
+}
+function brandPanel(x,bx,by,bw,bh,r){ x.fillStyle=BRAND.panel; roundRect(x,bx,by,bw,bh,r||10); x.fill(); x.strokeStyle=BRAND.line; x.lineWidth=1; roundRect(x,bx,by,bw,bh,r||10); x.stroke(); }
 async function exportMatchupPNG(a,b){
   try{ if(document.fonts&&document.fonts.ready) await document.fonts.ready; }catch(e){}
-  const W=1000,H=860,P=44, c=document.createElement("canvas");
+  const W=1000,H=884,P=44, c=document.createElement("canvas");
   c.width=W; c.height=H; const x=c.getContext("2d");
   const disp="'Bricolage Grotesque',sans-serif", body="'Hanken Grotesk',sans-serif";
-  x.fillStyle="#0f172a"; x.fillRect(0,0,W,H);
-  x.fillStyle="#22c55e"; x.fillRect(0,0,W,6);
-  // header
+  brandBg(x,W,H);
+  brandHeader(x,W,P,"Matchup");
   x.textBaseline="alphabetic";
-  x.fillStyle="#94a3b8"; x.font=`600 14px ${body}`; x.fillText("WC26 BOOKINGS DESK · MATCHUP CARD",P,52);
-  x.fillStyle="#f1f5f9"; x.font=`700 34px ${disp}`;
-  const title=`${a.n}  v  ${b.n}`; x.fillText(title,P,96);
+  // title: teams with accent 'v'
+  const ty=124;
+  x.font=`800 30px ${disp}`; x.fillStyle=BRAND.ink; x.fillText(a.n,P,ty);
+  const wa=x.measureText(a.n).width; x.fillStyle=BRAND.a2; x.fillText("  v  ",P+wa,ty);
+  const wv=x.measureText("  v  ").width; x.fillStyle=BRAND.ink; x.fillText(b.n,P+wa+wv,ty);
   const _fx=fixtureFor(a,b);
-  x.fillStyle="#94a3b8"; x.font=`500 15px ${body}`;
-  x.fillText(`Group ${a.g}${_fx?` · Match ${_fx.m} · ${fmtFixture(_fx)} · ${_fx.v}`:" · per-game form into WC2026"}`,P,120);
+  x.fillStyle=BRAND.sub; x.font=`500 15px ${body}`;
+  x.fillText(`Group ${a.g}${_fx?` · Match ${_fx.m} · ${fmtFixture(_fx)} · ${_fx.v}`:" · per-game form into WC2026"}${_fx&&_fx.ref?` · ${_fx.ref}`:""}`,P,150);
   // heat score top right
   const {score,avgCards,avgFouls}=heatScore(a,b);
   const hh=heatHex(score);
-  x.textAlign="right"; x.fillStyle=hh; x.font=`700 58px ${disp}`; x.fillText(score.toFixed(1),W-P,96);
-  x.fillStyle="#64748b"; x.font=`600 16px ${body}`; x.fillText("HEAT /10",W-P,118); x.textAlign="left";
+  x.textAlign="right"; x.fillStyle=hh; x.font=`800 50px ${disp}`; x.fillText(score.toFixed(1),W-P,128);
+  x.fillStyle=BRAND.faint; x.font=`700 13px ${body}`; x.fillText("HEAT /10",W-P,148); x.textAlign="left";
   // heat bar
-  const barY=140,barW=W-P*2;
-  x.fillStyle="#334155"; roundRect(x,P,barY,barW,16,8); x.fill();
-  x.fillStyle=hh; roundRect(x,P,barY,barW*(score/10),16,8); x.fill();
-  const verdict=score>=7?"High card risk fixture":score>=5?"Above average card risk":score>=3?"Moderate card risk":"Low card risk";
-  x.fillStyle=hh; x.font=`700 18px ${body}`; x.fillText(verdict,P,barY+44);
+  const barY=170,barW=W-P*2;
+  x.fillStyle=BRAND.panel; roundRect(x,P,barY,barW,14,7); x.fill();
+  x.fillStyle=hh; roundRect(x,P,barY,Math.max(14,barW*(score/10)),14,7); x.fill();
+  const verdict=score>=7?"High card-risk fixture":score>=5?"Above-average card risk":score>=3?"Moderate card risk":"Low card risk";
+  x.fillStyle=hh; x.font=`800 17px ${body}`; x.fillText(verdict,P,barY+42);
   // stat cells
-  const sy=210, cells=[["Avg cards against",avgCards.toFixed(2),"60% weight"],["Avg fouls made",avgFouls.toFixed(2),"40% weight"],[`${a.c} tier`,tierLabel(tierOf(a.ca)),`${a.ca.toFixed(1)} ca · ${a.fm.toFixed(1)} fm`],[`${b.c} tier`,tierLabel(tierOf(b.ca)),`${b.ca.toFixed(1)} ca · ${b.fm.toFixed(1)} fm`]];
+  const sy=242, cells=[["Avg cards against",avgCards.toFixed(2),"60% weight"],["Avg fouls made",avgFouls.toFixed(2),"40% weight"],[`${a.c} tier`,tierLabel(tierOf(a.ca)),`${a.ca.toFixed(1)} ca · ${a.fm.toFixed(1)} fm`],[`${b.c} tier`,tierLabel(tierOf(b.ca)),`${b.ca.toFixed(1)} ca · ${b.fm.toFixed(1)} fm`]];
   const cw=(W-P*2-30)/4;
   cells.forEach((cell,i)=>{ const cx=P+i*(cw+10);
-    x.fillStyle="#1e293b"; roundRect(x,cx,sy,cw,72,10); x.fill();
-    x.fillStyle="#64748b"; x.font=`600 11px ${body}`; x.fillText(cell[0].toUpperCase(),cx+12,sy+22);
-    x.fillStyle="#f1f5f9"; x.font=`700 22px ${disp}`; x.fillText(String(cell[1]),cx+12,sy+48);
-    x.fillStyle="#94a3b8"; x.font=`500 11px ${body}`; x.fillText(cell[2],cx+12,sy+64);
+    brandPanel(x,cx,sy,cw,74,12);
+    x.fillStyle=BRAND.faint; x.font=`700 11px ${body}`; x.fillText(cell[0].toUpperCase(),cx+12,sy+22);
+    x.fillStyle=BRAND.ink; x.font=`800 22px ${disp}`; x.fillText(String(cell[1]),cx+12,sy+49);
+    x.fillStyle=BRAND.sub; x.font=`500 11px ${body}`; x.fillText(cell[2],cx+12,sy+66);
   });
   // player columns
-  const py=320, colW=(W-P*2-30)/2;
+  const py=360, colW=(W-P*2-30)/2;
+  x.fillStyle=BRAND.a1; x.font=`800 13px ${body}`; x.fillText("BOOKING RISK · CLUB FORM",P,py-14);
   [a,b].forEach((team,ci)=>{ const cx=P+ci*(colW+30);
-    x.fillStyle="#f1f5f9"; x.font=`700 18px ${disp}`; x.fillText(team.n,cx,py);
+    x.fillStyle=BRAND.ink; x.font=`800 18px ${disp}`; x.fillText(team.n,cx,py);
     const top=PLAYERS.filter(p=>p.t===team.c&&p.r!=null).sort((m,n)=>n.r-m.r).slice(0,6);
-    if(!top.length){ x.fillStyle="#64748b"; x.font=`500 14px ${body}`; x.fillText("No club-league data",cx,py+30); }
+    if(!top.length){ x.fillStyle=BRAND.faint; x.font=`500 14px ${body}`; x.fillText("No club-league data",cx,py+30); }
     top.forEach((p,i)=>{ const ry=py+30+i*32;
-      x.fillStyle="#334155"; x.font=`700 13px ${body}`; x.fillText(String(i+1),cx,ry);
-      x.fillStyle="#e2e8f0"; x.font=`600 15px ${body}`;
+      x.fillStyle=BRAND.line; x.font=`800 13px ${body}`; x.fillText(String(i+1),cx,ry);
+      x.fillStyle=BRAND.ink; x.font=`600 15px ${body}`;
       let nm=p.n; while(x.measureText(nm).width>colW-110) nm=nm.slice(0,-1);
       x.fillText(nm,cx+22,ry);
-      x.textAlign="right"; x.fillStyle=riskHex(p.r); x.font=`700 16px ${disp}`; x.fillText(p.r.toFixed(2),cx+colW,ry); x.textAlign="left";
+      x.textAlign="right"; x.fillStyle=riskHex(p.r); x.font=`800 16px ${disp}`; x.fillText(p.r.toFixed(2),cx+colW,ry); x.textAlign="left";
     });
-    // qualifying card leader (international form, drawn yellow-card icon)
     const q=(typeof QUAL!=="undefined")?QUAL[team.c]:null;
     if(q&&q.yc&&q.yc.p){
       const yq=py+30+6*32+22;
-      x.fillStyle="#eab308"; roundRect(x,cx,yq-11,9,13,2); x.fill();
-      x.fillStyle="#94a3b8"; x.font=`600 11px ${body}`; x.fillText("QUAL CARD LEADER",cx+15,yq-1);
-      x.fillStyle="#e2e8f0"; x.font=`600 14px ${body}`;
+      x.fillStyle=BRAND.warn; roundRect(x,cx,yq-11,9,13,2); x.fill();
+      x.fillStyle=BRAND.faint; x.font=`700 11px ${body}`; x.fillText("QUAL CARD LEADER",cx+15,yq-1);
+      x.fillStyle=BRAND.ink; x.font=`600 14px ${body}`;
       let qn=q.yc.p; while(x.measureText(qn).width>colW-70) qn=qn.slice(0,-1);
       x.fillText(qn,cx,yq+18);
-      x.textAlign="right"; x.fillStyle="#eab308"; x.font=`700 14px ${disp}`; x.fillText(q.yc.v.toFixed(2)+"/90",cx+colW,yq+18); x.textAlign="left";
+      x.textAlign="right"; x.fillStyle=BRAND.warn; x.font=`800 14px ${disp}`; x.fillText(q.yc.v.toFixed(2)+"/90",cx+colW,yq+18); x.textAlign="left";
     }
   });
   // ---- goal threats section ----
-  const gx0=608;
-  x.strokeStyle="#1e293b"; x.lineWidth=1; x.beginPath(); x.moveTo(P,gx0); x.lineTo(W-P,gx0); x.stroke();
-  x.fillStyle="#94a3b8"; x.font=`600 14px ${body}`; x.fillText("GOAL THREATS · CLUB FORM",P,gx0+26);
+  const gx0=636;
+  x.strokeStyle=BRAND.line; x.lineWidth=1; x.beginPath(); x.moveTo(P,gx0); x.lineTo(W-P,gx0); x.stroke();
+  x.fillStyle=BRAND.a1; x.font=`800 13px ${body}`; x.fillText("GOAL THREATS · CLUB FORM",P,gx0+26);
   const xfA=((a.gf+b.ga)/2), xfB=((b.gf+a.ga)/2), xTot=xfA+xfB;
-  x.textAlign="right"; x.fillStyle="#3b82f6"; x.font=`700 20px ${disp}`; x.fillText(xTot.toFixed(1)+" exp goals",W-P,gx0+26); x.textAlign="left";
-  const gy=gx0+56;
+  x.textAlign="right"; x.fillStyle=BRAND.a2; x.font=`800 20px ${disp}`; x.fillText(xTot.toFixed(1)+" exp goals",W-P,gx0+26); x.textAlign="left";
+  const gy=gx0+58;
   [a,b].forEach((team,ci)=>{ const cx=P+ci*(colW+30);
-    x.fillStyle="#f1f5f9"; x.font=`700 15px ${disp}`; x.fillText(team.n,cx,gy);
+    x.fillStyle=BRAND.ink; x.font=`800 15px ${disp}`; x.fillText(team.n,cx,gy);
     const tg=PLAYERS.filter(p=>p.t===team.c&&p.gt!=null).sort((m,n)=>n.gt-m.gt).slice(0,4);
-    if(!tg.length){ x.fillStyle="#64748b"; x.font=`500 13px ${body}`; x.fillText("No data",cx,gy+24); }
+    if(!tg.length){ x.fillStyle=BRAND.faint; x.font=`500 13px ${body}`; x.fillText("No data",cx,gy+24); }
     tg.forEach((p,i)=>{ const ry=gy+28+i*26;
-      x.fillStyle="#e2e8f0"; x.font=`600 14px ${body}`;
+      x.fillStyle=BRAND.ink; x.font=`600 14px ${body}`;
       let nm=p.n; while(x.measureText(nm).width>colW-90) nm=nm.slice(0,-1);
       x.fillText(nm,cx,ry);
-      x.fillStyle="#64748b"; x.font=`500 11px ${body}`; x.fillText(`${p.g90!=null?p.g90.toFixed(2):'—'} g · ${p.xg90!=null?p.xg90.toFixed(2):'—'} xG /90`,cx,ry+13);
-      x.textAlign="right"; x.fillStyle=goalHex(p.gt); x.font=`700 16px ${disp}`; x.fillText(p.gt.toFixed(2),cx+colW,ry+4); x.textAlign="left";
+      x.fillStyle=BRAND.faint; x.font=`500 11px ${body}`; x.fillText(`${p.g90!=null?p.g90.toFixed(2):'—'} g · ${p.xg90!=null?p.xg90.toFixed(2):'—'} xG /90`,cx,ry+13);
+      x.textAlign="right"; x.fillStyle=goalHex(p.gt); x.font=`800 16px ${disp}`; x.fillText(p.gt.toFixed(2),cx+colW,ry+4); x.textAlign="left";
     });
   });
-  // footer
-  x.fillStyle="#475569"; x.font=`500 12px ${body}`;
-  x.fillText(`heat = (${avgCards.toFixed(2)}/3.1 × 6) + (${avgFouls.toFixed(2)}/15.4 × 4) = ${score.toFixed(1)}   ·   exp goals = ${xTot.toFixed(1)}`,P,H-44);
-  x.fillStyle="#64748b"; x.font=`500 12px ${body}`;
-  x.fillText("Bookings + goals, club form · team form via ScoutingStats · research, not a betting guarantee",P,H-22);
+  brandFooter(x,W,H,P,`heat = (${avgCards.toFixed(2)}/3.1×6)+(${avgFouls.toFixed(2)}/15.4×4) = ${score.toFixed(1)} · exp goals ${xTot.toFixed(1)} · via ScoutingStats`);
   // download
   c.toBlob(blob=>{
     const url=URL.createObjectURL(blob), aEl=document.createElement("a");
@@ -3414,42 +3451,36 @@ function clearMD1(){
 async function exportMD1PNG(){
   try{ if(document.fonts&&document.fonts.ready) await document.fonts.ready; }catch(e){}
   const disp="'Bricolage Grotesque',sans-serif", body="'Hanken Grotesk',sans-serif";
-  const W=1000, P=44, rowH=32, ty=150, H=ty+30+MD1_PREDICTIONS.length*rowH+62;
+  const W=1000, P=44, rowH=33, ty=150, H=ty+30+MD1_PREDICTIONS.length*rowH+64;
   const c=document.createElement("canvas"); c.width=W; c.height=H; const x=c.getContext("2d");
-  x.fillStyle="#0f172a"; x.fillRect(0,0,W,H);
-  x.fillStyle="#22c55e"; x.fillRect(0,0,W,6);
+  brandBg(x,W,H);
+  brandHeader(x,W,P,"Matchday 1");
   x.textBaseline="alphabetic";
-  // header
-  x.fillStyle="#94a3b8"; x.font=`600 14px ${body}`; x.fillText("WC26 BOOKINGS DESK · MATCHDAY 1 PREDICTIONS",P,52);
-  x.fillStyle="#f1f5f9"; x.font=`700 34px ${disp}`; x.fillText("Matchday 1 — Prediction Card",P,96);
-  x.fillStyle="#94a3b8"; x.font=`500 15px ${body}`; x.fillText("24 group openers · model result + correct score · ranked by confidence",P,120);
+  x.fillStyle=BRAND.ink; x.font=`800 30px ${disp}`; x.fillText("Prediction Card",P,124);
+  x.fillStyle=BRAND.sub; x.font=`500 14px ${body}`; x.fillText("24 group openers · model result + correct score · ranked by confidence",P,148);
   // column headers
-  x.fillStyle="#64748b"; x.font=`600 11px ${body}`;
+  x.fillStyle=BRAND.faint; x.font=`700 11px ${body}`;
   x.fillText("#",P,ty); x.fillText("FIXTURE",P+30,ty); x.fillText("RESULT",560,ty);
   x.textAlign="center"; x.fillText("SCORE",745,ty); x.fillText("CONF",852,ty); x.textAlign="left";
-  x.strokeStyle="#1e293b"; x.lineWidth=1; x.beginPath(); x.moveTo(P,ty+8); x.lineTo(W-P,ty+8); x.stroke();
+  x.strokeStyle=BRAND.line; x.lineWidth=1; x.beginPath(); x.moveTo(P,ty+8); x.lineTo(W-P,ty+8); x.stroke();
   // rows
   MD1_PREDICTIONS.forEach((m,i)=>{
     const ry=ty+38+i*rowH;
-    if(i%2===0){ x.fillStyle="#15203a"; x.fillRect(P-12,ry-20,W-2*(P-12),rowH); }
-    x.fillStyle="#475569"; x.font=`700 13px ${body}`; x.fillText(String(i+1),P,ry);
-    x.fillStyle="#e2e8f0"; x.font=`600 15px ${body}`;
+    if(i%2===0){ x.fillStyle="rgba(255,255,255,0.035)"; roundRect(x,P-12,ry-21,W-2*(P-12),rowH,7); x.fill(); }
+    x.fillStyle=BRAND.faint; x.font=`800 13px ${body}`; x.fillText(String(i+1),P,ry);
+    x.fillStyle=BRAND.ink; x.font=`600 15px ${body}`;
     let nm=m.f; while(x.measureText(nm).width>505) nm=nm.slice(0,-1);
     x.fillText(nm,P+30,ry);
     const isDraw=m.r==="Draw";
-    x.fillStyle=isDraw?"#94a3b8":"#f1f5f9"; x.font=`700 15px ${body}`;
+    x.fillStyle=isDraw?BRAND.sub:BRAND.ink; x.font=`700 15px ${body}`;
     let rn=m.r; while(x.measureText(rn).width>175) rn=rn.slice(0,-1);
     x.fillText(rn,560,ry);
-    x.textAlign="center"; x.fillStyle="#3b82f6"; x.font=`700 16px ${disp}`; x.fillText(m.s.replace("-","–"),745,ry); x.textAlign="left";
-    const tier=i<7?["HIGH","#16a34a"]:i<17?["MED","#d97706"]:["LOW","#64748b"];
+    x.textAlign="center"; x.fillStyle=BRAND.a2; x.font=`800 16px ${disp}`; x.fillText(m.s.replace("-","–"),745,ry); x.textAlign="left";
+    const tier=i<7?["HIGH",BRAND.good]:i<17?["MED",BRAND.warn]:["LOW",BRAND.faint];
     x.fillStyle=tier[1]; roundRect(x,820,ry-15,64,21,10); x.fill();
-    x.fillStyle="#ffffff"; x.font=`700 11px ${body}`; x.textAlign="center"; x.fillText(tier[0],852,ry-1); x.textAlign="left";
+    x.fillStyle=BRAND.bg0; x.font=`800 11px ${body}`; x.textAlign="center"; x.fillText(tier[0],852,ry-1); x.textAlign="left";
   });
-  // footer
-  x.fillStyle="#475569"; x.font=`500 12px ${body}`;
-  x.fillText("Scores in fixture order · model: xG = (team goals-for + opp goals-against)/2, tempered for quality",P,H-30);
-  x.fillStyle="#64748b"; x.font=`500 12px ${body}`;
-  x.fillText("For fun only · correct-score bets are designed to mostly miss · stake responsibly",P,H-12);
+  brandFooter(x,W,H,P,"Scores in fixture order · model xG=(GF+opp GA)/2, tempered · correct-score bets mostly miss");
   c.toBlob(blob=>{
     const url=URL.createObjectURL(blob), aEl=document.createElement("a");
     aEl.href=url; aEl.download="wc26-matchday1-predictions.png"; aEl.click();
