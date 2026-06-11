@@ -209,6 +209,18 @@
         <button type="submit" class="surface-2" style="border:1px solid var(--accent-green);color:var(--accent-green);border-radius:8px;padding:.55rem .9rem;font-weight:600;cursor:pointer">Add pick</button>
       </form>
     </details>
+    <div class="surface" style="border-radius:12px;padding:.8rem 1rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center">
+      <div style="min-width:0;flex:1 1 220px">
+        <strong style="font-family:'Bricolage Grotesque',sans-serif">Matchday 1 predictions</strong>
+        <p class="faint" style="margin:.15rem 0 0;font-size:.76rem">Load the 24 model calls as pending picks, then settle each as results come in. Add your own odds/stake per row if you want P/L.</p>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:.4rem">
+        <button id="md1Results" class="surface-2" style="border:1px solid var(--accent-green);color:var(--accent-green);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">Load results (24)</button>
+        <button id="md1Scores" class="surface-2" style="border:1px solid var(--accent-blue);color:var(--accent-blue);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">Load correct scores (24)</button>
+        <button id="md1Both" class="surface-2" style="border:1px solid var(--border);color:var(--text-primary);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">Load both</button>
+      </div>
+      <p id="md1Msg" class="muted" role="status" aria-live="polite" style="margin:0;font-size:.78rem;flex-basis:100%"></p>
+    </div>
     <div class="surface" style="border-radius:12px;overflow:auto">
       <table>
         <caption class="visually-hidden">Logged picks for the hit-rate trial</caption>
@@ -3233,6 +3245,56 @@ $("pickRows").addEventListener("click",e=>{
   const b=e.target.closest(".pk-del"); if(!b) return;
   state.picks=state.picks.filter(x=>x.id!==b.dataset.id); saveState(); renderTracker();
 });
+
+// ---- Matchday 1 model predictions (result + correct score), ranked by confidence ----
+// Scores are in fixture order (first team listed v second). r = predicted result.
+const MD1_PREDICTIONS=[
+  {f:"Germany v Curaçao", r:"Germany", s:"3-0"},
+  {f:"Spain v Cape Verde", r:"Spain", s:"3-0"},
+  {f:"Iraq v Norway", r:"Norway", s:"1-3"},
+  {f:"Algeria v Argentina", r:"Argentina", s:"0-2"},
+  {f:"Qatar v Switzerland", r:"Switzerland", s:"1-2"},
+  {f:"Austria v Jordan", r:"Austria", s:"2-0"},
+  {f:"Congo DR v Portugal", r:"Portugal", s:"0-2"},
+  {f:"Croatia v England", r:"England", s:"1-2"},
+  {f:"Belgium v Egypt", r:"Belgium", s:"2-1"},
+  {f:"Haiti v Scotland", r:"Scotland", s:"1-2"},
+  {f:"Iran v New Zealand", r:"Iran", s:"2-1"},
+  {f:"Bosnia & Herzegovina v Canada", r:"Canada", s:"1-2"},
+  {f:"Saudi Arabia v Uruguay", r:"Uruguay", s:"0-1"},
+  {f:"Sweden v Tunisia", r:"Sweden", s:"2-1"},
+  {f:"Colombia v Uzbekistan", r:"Colombia", s:"2-1"},
+  {f:"Australia v Türkiye", r:"Türkiye", s:"1-2"},
+  {f:"France v Senegal", r:"France", s:"2-1"},
+  {f:"Côte d'Ivoire v Ecuador", r:"Côte d'Ivoire", s:"1-0"},
+  {f:"Czech Republic v Korea Republic", r:"Draw", s:"1-1"},
+  {f:"Paraguay v USA", r:"Draw", s:"1-1"},
+  {f:"Mexico v South Africa", r:"Draw", s:"1-1"},
+  {f:"Netherlands v Japan", r:"Draw", s:"1-1"},
+  {f:"Brazil v Morocco", r:"Draw", s:"1-1"},
+  {f:"Ghana v Panama", r:"Ghana", s:"2-1"},
+];
+function loadMD1(which){
+  let added=0, dup=0;
+  MD1_PREDICTIONS.forEach(m=>{
+    const items=[];
+    if(which!=="score") items.push({market:"Match result", selection:m.r});
+    if(which!=="result") items.push({market:"Correct score", selection:m.s});
+    items.forEach(it=>{
+      if(state.picks.some(p=>p.fixture===m.f&&p.market===it.market)){ dup++; return; }
+      state.picks.push({id:"p"+(pickSeq++),fixture:m.f,selection:it.selection,market:it.market,odds:"",stake:"",status:"pending"});
+      added++;
+    });
+  });
+  if(added){ saveState(); renderTracker(); }
+  const msg=$("md1Msg");
+  if(msg) msg.textContent = added
+    ? `Added ${added} pick${added>1?"s":""} to the tracker.${dup?` ${dup} already loaded, skipped.`:""}`
+    : (dup?"Those picks are already loaded.":"Nothing to add.");
+}
+$("md1Results").addEventListener("click",()=>loadMD1("result"));
+$("md1Scores").addEventListener("click",()=>loadMD1("score"));
+$("md1Both").addEventListener("click",()=>loadMD1("both"));
 
 // init
 groupOptions();
