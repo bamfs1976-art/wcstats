@@ -3550,7 +3550,7 @@ function renderHome(){
   const hotName=hottest?(()=>{ const cs=hottest.x.k.split("|"); return `${cs[0]} v ${cs[1]}`; })():"—";
   const topThreat=playerSrc("club").filter(p=>p.gt!=null&&!p.ls).sort((a,b)=>b.gt-a.gt)[0];
   const topRef=[...REFS].filter(r=>r.ypg!=null).sort((a,b)=>b.ypg-a.ypg)[0];
-  const HOT_MIN=8.0;
+  const HOT_MIN=7.5;
   const hotList=up.map(x=>{ const p=predForKey(x.k), cs=x.k.split("|"), A=teamByCode(p?p.a:cs[0]), B=teamByCode(p?p.b:cs[1]); return A&&B?{x,A,B,h:heatScore(A,B).score}:null; }).filter(r=>r&&r.h>=HOT_MIN);
   const hotRows=hotList.map(r=>`<div style="display:flex;align-items:center;gap:.7rem;padding:.55rem .15rem;border-top:1px solid var(--border)">
       <span class="display num" style="font-size:1.25rem;color:${heatColour(r.h)};min-width:44px;flex:none">${r.h.toFixed(1)}</span>
@@ -3576,7 +3576,7 @@ function renderHome(){
     </div>
     <div class="surface" style="border-radius:14px;padding:.9rem 1.1rem;margin-bottom:1rem">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;flex-wrap:wrap">
-        <h3 style="margin:0;font-size:1.05rem">🔥 Hottest matches · 8.0+</h3>
+        <h3 style="margin:0;font-size:1.05rem">🔥 Hottest matches · 7.5+</h3>
         <span class="faint" style="font-size:.76rem">${hotList.length} upcoming · card-risk heat, soonest first</span>
       </div>
       ${hotList.length?hotRows:'<p class="muted" style="margin:.6rem 0 0;font-size:.85rem">No upcoming fixtures above 8.0 right now. Check the Matchups tab for the full heat board.</p>'}
