@@ -3550,6 +3550,16 @@ function renderHome(){
   const hotName=hottest?(()=>{ const cs=hottest.x.k.split("|"); return `${cs[0]} v ${cs[1]}`; })():"—";
   const topThreat=playerSrc("club").filter(p=>p.gt!=null&&!p.ls).sort((a,b)=>b.gt-a.gt)[0];
   const topRef=[...REFS].filter(r=>r.ypg!=null).sort((a,b)=>b.ypg-a.ypg)[0];
+  const HOT_MIN=8.0;
+  const hotList=up.map(x=>{ const p=predForKey(x.k), cs=x.k.split("|"), A=teamByCode(p?p.a:cs[0]), B=teamByCode(p?p.b:cs[1]); return A&&B?{x,A,B,h:heatScore(A,B).score}:null; }).filter(r=>r&&r.h>=HOT_MIN);
+  const hotRows=hotList.map(r=>`<div style="display:flex;align-items:center;gap:.7rem;padding:.55rem .15rem;border-top:1px solid var(--border)">
+      <span class="display num" style="font-size:1.25rem;color:${heatColour(r.h)};min-width:44px;flex:none">${r.h.toFixed(1)}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${crest(r.A,16)} ${esc(r.A.n)} <span class="faint" style="font-weight:400">v</span> ${crest(r.B,16)} ${esc(r.B.n)}</div>
+        <div class="faint" style="font-size:.74rem">📅 ${fmtFixture(r.x.fx)} · ${esc(r.x.fx.v)}${r.x.fx.ref?` · 🧑‍⚖️ ${esc(r.x.fx.ref)}`:''}</div>
+      </div>
+      <span class="chip surface-2" style="border:1px solid var(--border);flex:none">Grp ${r.A.g}</span>
+    </div>`).join("");
   $("homeOut").innerHTML=
     `<div class="surface" style="border-radius:16px;padding:1rem 1.2rem;margin-bottom:1rem;background:linear-gradient(135deg,var(--bg-secondary),var(--bg-tertiary))">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap">
@@ -3564,6 +3574,14 @@ function renderHome(){
       ${homeStat("Ref to watch",topRef?esc(topRef.n):"—",topRef?`${topRef.ypg.toFixed(1)} yel/game`:"","var(--warn)")}
       ${homeStat("The field","48","teams · 12 groups")}
     </div>
+    <div class="surface" style="border-radius:14px;padding:.9rem 1.1rem;margin-bottom:1rem">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;flex-wrap:wrap">
+        <h3 style="margin:0;font-size:1.05rem">🔥 Hottest matches · 8.0+</h3>
+        <span class="faint" style="font-size:.76rem">${hotList.length} upcoming · card-risk heat, soonest first</span>
+      </div>
+      ${hotList.length?hotRows:'<p class="muted" style="margin:.6rem 0 0;font-size:.85rem">No upcoming fixtures above 8.0 right now. Check the Matchups tab for the full heat board.</p>'}
+    </div>
+    <h3 style="margin:0 0 .6rem;font-size:1.05rem">Next up</h3>
     ${featured?homeMatchCard(featured,true):'<p class="muted">No upcoming fixtures.</p>'}
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.7rem;margin-top:.8rem">
       ${slate.slice(1).map(e=>homeMatchCard(e,false)).join("")}
