@@ -3119,7 +3119,7 @@ function renderScorers(){
   let body="";
   if(v==="tournament"){
     const list=playerSrc(m).filter(p=>p.gt!=null&&!p.ls).sort((a,b)=>b.gt-a.gt).slice(0,20);
-    body=scorerTable(list.map(scorerRow).join(""), "Player");
+    body=scorerTable(list.map(p=>scorerRow(p)).join(""), "Player");
   } else if(v==="team"){
     const rows=TEAMS.filter(t=>t.ca!=null).map(t=>bestScorer(t.c,m)).filter(Boolean).sort((a,b)=>b.gt-a.gt);
     const miss=TEAMS.filter(t=>t.ca!=null&&!bestScorer(t.c,m));
