@@ -3156,6 +3156,10 @@ function brandFooter(x,W,H,P,note){
   x.textAlign="right"; x.fillStyle=BRAND.faint; x.fillText("18+ · Stake responsibly",W-P,H-31); x.textAlign="left";
 }
 function brandPanel(x,bx,by,bw,bh,r){ x.fillStyle=BRAND.panel; roundRect(x,bx,by,bw,bh,r||10); x.fill(); x.strokeStyle=BRAND.line; x.lineWidth=1; roundRect(x,bx,by,bw,bh,r||10); x.stroke(); }
+// referee cards-risk: match a fixture's ref string to the watchlist (accent-insensitive) and colour by yellows/game
+function refRiskHex(y){ if(y==null) return BRAND.faint; return y>=5?BRAND.hot:y>=4.2?BRAND.warn:y>=3.4?BRAND.good:BRAND.sub; }
+function normName(s){ return (s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().trim(); }
+function refForFixture(fx){ if(!fx||!fx.ref) return null; const nm=normName(fx.ref.replace(/\s*\([^)]*\)\s*$/,"")); return REFS.find(r=>normName(r.n)===nm)||null; }
 async function exportMatchupPNG(a,b){
   try{ if(document.fonts&&document.fonts.ready) await document.fonts.ready; }catch(e){}
   const W=1000,H=884,P=44, c=document.createElement("canvas");
@@ -3183,6 +3187,14 @@ async function exportMatchupPNG(a,b){
   x.fillStyle=hh; roundRect(x,P,barY,Math.max(14,barW*(score/10)),14,7); x.fill();
   const verdict=score>=7?"High card-risk fixture":score>=5?"Above-average card risk":score>=3?"Moderate card risk":"Low card risk";
   x.fillStyle=hh; x.font=`800 17px ${body}`; x.fillText(verdict,P,barY+42);
+  // referee cards-risk flag (right of verdict)
+  const rf=refForFixture(_fx);
+  if(rf&&rf.ypg!=null){
+    x.textAlign="right";
+    x.fillStyle=BRAND.faint; x.font=`700 11px ${body}`; x.fillText(`REF · ${rf.n.toUpperCase()}`,W-P,barY+30);
+    x.fillStyle=refRiskHex(rf.ypg); x.font=`800 17px ${disp}`; x.fillText(`${rf.ypg.toFixed(1)} yel/game`,W-P,barY+48);
+    x.textAlign="left";
+  }
   // stat cells
   const sy=242, cells=[["Avg cards against",avgCards.toFixed(2),"60% weight"],["Avg fouls made",avgFouls.toFixed(2),"40% weight"],[`${a.c} tier`,tierLabel(tierOf(a.ca)),`${a.ca.toFixed(1)} ca · ${a.fm.toFixed(1)} fm`],[`${b.c} tier`,tierLabel(tierOf(b.ca)),`${b.ca.toFixed(1)} ca · ${b.fm.toFixed(1)} fm`]];
   const cw=(W-P*2-30)/4;
@@ -3522,6 +3534,8 @@ function homeMatchCard(entry,featured){
   const xgA=(A.gf+B.ga)/2, xgB=(B.gf+A.ga)/2;
   const o25=Math.round((A.o25+B.o25)/2), btts=Math.round((A.btts+B.btts)/2);
   const pick=p?`<span class="surface-2" style="border-radius:7px;padding:.25rem .55rem"><span class="faint">Model</span> <strong>${esc(p.r)}</strong> <span class="num" style="color:var(--accent-blue);font-weight:700">${esc(p.s.replace("-","–"))}</span></span>`:"";
+  const rf=refForFixture(fx);
+  const refPill=rf&&rf.ypg!=null?`<span class="surface-2" style="border-radius:7px;padding:.25rem .55rem" title="referee yellows per game">🟨 <strong class="num" style="color:${refRiskHex(rf.ypg)}">${rf.ypg.toFixed(1)}</strong> ref/g</span>`:"";
   const sz=featured?26:20;
   return `<div class="surface" style="border-radius:14px;padding:${featured?'1.1rem 1.2rem':'.85rem 1rem'};display:flex;flex-direction:column;gap:.55rem;border-left:3px solid ${col}">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem">
@@ -3538,6 +3552,7 @@ function homeMatchCard(entry,featured){
       <span class="surface-2" style="border-radius:7px;padding:.25rem .55rem">xG <strong class="num">${xgA.toFixed(1)}–${xgB.toFixed(1)}</strong></span>
       <span class="surface-2" style="border-radius:7px;padding:.25rem .55rem">O2.5 <strong class="num">${o25}%</strong></span>
       <span class="surface-2" style="border-radius:7px;padding:.25rem .55rem">BTTS <strong class="num">${btts}%</strong></span>
+      ${refPill}
       ${pick}
     </div>
   </div>`;
