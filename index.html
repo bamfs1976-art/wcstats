@@ -1,80 +1,113 @@
 <!DOCTYPE html>
-<html lang="en-GB" data-theme="dark">
+<html lang="en-GB" data-theme="light">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://flagcdn.com; connect-src 'self'">
-<title>WC26 Bookings Desk</title>
+<title>Bookings Desk · World Cup 2026</title>
 <meta name="description" content="World Cup 2026 player-bookings analysis. Team cards-against and fouls-made, a same-group matchup heat calculator and a referee watchlist.">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="favicon.svg">
+<meta name="theme-color" content="#3d195b">
+<meta property="og:title" content="Bookings Desk · World Cup 2026">
+<meta property="og:description" content="Stats-based World Cup 2026 player-bookings analysis: team discipline, matchup heat, goals and scorers.">
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg-primary:#0f172a; --bg-secondary:#1e293b; --bg-tertiary:#334155;
-    --text-primary:#f1f5f9; --text-secondary:#94a3b8; --text-muted:#64748b;
-    --accent-green:#22c55e; --accent-blue:#3b82f6; --danger:#ef4444;
-    --warn:#f59e0b; --border:#475569;
-    --target:#22c55e; --mid:#f59e0b; --fade:#64748b; --pending:#6366f1;
+    /* Bookings Desk design system, light default */
+    --bg:#eef1f6; --surface:#ffffff; --surface-2:#f4f6fa; --surface-3:#eaedf3;
+    --text:#0c1322; --text-2:#586275; --text-3:#8b94a5; --border:#e3e7ee; --border-2:#d7dce6;
+    --accent:#3d195b; --accent-2:#e90052; --on-accent:#ffffff;
+    --danger:#dc2626; --warn:#d97706; --good:#16a34a; --info:#4f46e5;
+    --target:#16a34a; --mid:#d97706; --fade:#64748b; --pending:#7c3aed;
+    --shadow-sm:0 1px 2px rgba(13,19,34,.06); --shadow:0 4px 16px -4px rgba(13,19,34,.12),0 1px 3px rgba(13,19,34,.06);
+    --ring:rgba(61,25,91,.45);
+    --bg-primary:var(--bg); --bg-secondary:var(--surface); --bg-tertiary:var(--surface-2);
+    --text-primary:var(--text); --text-secondary:var(--text-2); --text-muted:var(--text-3);
+    --accent-green:var(--good); --accent-blue:var(--info);
   }
-  html[data-theme="light"]{
-    --bg-primary:#f8fafc; --bg-secondary:#ffffff; --bg-tertiary:#e2e8f0;
-    --text-primary:#0f172a; --text-secondary:#475569; --text-muted:#64748b;
-    --border:#cbd5e1;
+  html[data-theme="dark"]{
+    --bg:#0b0f1a; --surface:#141b2c; --surface-2:#1b2336; --surface-3:#232c42;
+    --text:#eef1f7; --text-2:#9aa6bb; --text-3:#6b7790; --border:#283248; --border-2:#33405a;
+    --accent:#a78bfa; --accent-2:#ff2d7e; --on-accent:#160a24;
+    --danger:#f87171; --warn:#fbbf24; --good:#34d399; --info:#a5b4fc;
+    --target:#34d399; --mid:#fbbf24; --fade:#94a3b8; --pending:#c4b5fd;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.4); --shadow:0 10px 30px -8px rgba(0,0,0,.55),0 2px 6px rgba(0,0,0,.4);
+    --ring:rgba(167,139,250,.5);
   }
   *{box-sizing:border-box}
-  body{background:var(--bg-primary); color:var(--text-primary); font-family:'Hanken Grotesk',system-ui,sans-serif; margin:0; transition:background .2s,color .2s}
+  body{background:var(--bg); color:var(--text); font-family:'Hanken Grotesk',system-ui,sans-serif; margin:0; transition:background .25s,color .25s; -webkit-font-smoothing:antialiased}
   h1,h2,h3,.display{font-family:'Bricolage Grotesque',system-ui,sans-serif; letter-spacing:-.02em}
-  .surface{background:var(--bg-secondary); border:1px solid var(--border)}
-  .surface-2{background:var(--bg-tertiary)}
-  .muted{color:var(--text-secondary)}
-  .faint{color:var(--text-muted)}
-  a{color:var(--accent-blue)}
-  /* focus visibility for WCAG 2.2 */
-  a:focus-visible,button:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{
-    outline:3px solid var(--accent-blue); outline-offset:2px; border-radius:6px}
-  .tier-target{background:rgba(34,197,94,.15); color:var(--accent-green); border:1px solid rgba(34,197,94,.4)}
-  .tier-mid{background:rgba(245,158,11,.15); color:var(--warn); border:1px solid rgba(245,158,11,.4)}
-  .tier-fade{background:rgba(100,116,139,.15); color:var(--text-secondary); border:1px solid rgba(100,116,139,.4)}
-  .tier-pending{background:rgba(99,102,241,.15); color:#a5b4fc; border:1px solid rgba(99,102,241,.4)}
-  .chip{display:inline-flex; align-items:center; gap:.35rem; padding:.15rem .55rem; border-radius:999px; font-size:.72rem; font-weight:600; line-height:1.4}
-  table{border-collapse:collapse; width:100%}
-  th{position:sticky; top:0; background:var(--bg-secondary); z-index:1}
-  th button{font:inherit; color:var(--text-secondary); background:none; border:0; cursor:pointer; font-weight:600; display:flex; align-items:center; gap:.25rem; width:100%}
+  .surface{background:var(--surface); border:1px solid var(--border); box-shadow:var(--shadow-sm)}
+  .surface-2{background:var(--surface-2)}
+  .muted{color:var(--text-2)} .faint{color:var(--text-3)}
+  a{color:var(--accent-2);text-decoration:none}
+  a:focus-visible,button:focus-visible,select:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--ring); outline-offset:2px; border-radius:8px}
+  .tier-target{background:color-mix(in srgb,var(--target) 14%,transparent); color:var(--target); border:1px solid color-mix(in srgb,var(--target) 35%,transparent)}
+  .tier-mid{background:color-mix(in srgb,var(--mid) 14%,transparent); color:var(--mid); border:1px solid color-mix(in srgb,var(--mid) 35%,transparent)}
+  .tier-fade{background:color-mix(in srgb,var(--fade) 12%,transparent); color:var(--text-2); border:1px solid color-mix(in srgb,var(--fade) 30%,transparent)}
+  .tier-pending{background:color-mix(in srgb,var(--pending) 14%,transparent); color:var(--pending); border:1px solid color-mix(in srgb,var(--pending) 35%,transparent)}
+  .chip{display:inline-flex; align-items:center; gap:.3rem; padding:.12rem .5rem; border-radius:999px; font-size:.7rem; font-weight:700; line-height:1.5}
+  table{border-collapse:separate; border-spacing:0; width:100%}
+  thead th{position:sticky; top:0; background:var(--surface); z-index:1; font-size:.7rem; text-transform:uppercase; letter-spacing:.05em; color:var(--text-3); font-weight:700; border-bottom:1px solid var(--border)}
+  th button{font:inherit; color:inherit; background:none; border:0; cursor:pointer; font-weight:700; display:inline-flex; align-items:center; gap:.2rem; text-transform:inherit; letter-spacing:inherit}
+  th button:hover{color:var(--text)}
   tbody tr{border-top:1px solid var(--border)}
-  tbody tr:hover{background:var(--bg-tertiary)}
+  tbody tr:hover{background:var(--surface-2)}
   .num{font-variant-numeric:tabular-nums}
   .crest{border-radius:3px;object-fit:cover;vertical-align:-4px;box-shadow:0 0 0 1px var(--border);display:inline-block}
-  .star{background:none;border:0;cursor:pointer;font-size:1.1rem;line-height:1;color:var(--text-muted);padding:.2rem}
-  .star[aria-pressed="true"]{color:var(--accent-green)}
-  .tabbtn{padding:.6rem 1rem; border-radius:10px 10px 0 0; border:1px solid transparent; border-bottom:0; background:none; color:var(--text-secondary); font-weight:600; cursor:pointer}
-  .tabbtn[aria-selected="true"]{background:var(--bg-secondary); color:var(--text-primary); border-color:var(--border)}
-  .heatbar{height:14px;border-radius:999px;background:var(--bg-tertiary);overflow:hidden}
+  .star{background:none;border:0;cursor:pointer;font-size:1.1rem;line-height:1;color:var(--text-3);padding:.2rem}
+  .star[aria-pressed="true"]{color:var(--good)}
+  .tabs{display:inline-flex;gap:.2rem;background:var(--surface-2);border:1px solid var(--border);padding:.25rem;border-radius:12px;flex-wrap:wrap}
+  .tabbtn{padding:.45rem .85rem;border-radius:9px;border:0;background:none;color:var(--text-2);font-weight:600;cursor:pointer;font-size:.88rem;transition:.15s}
+  .tabbtn:hover{color:var(--text)}
+  .tabbtn[aria-selected="true"]{background:var(--surface);color:var(--text);box-shadow:var(--shadow-sm);font-weight:700}
+  .heatbar{height:14px;border-radius:999px;background:var(--surface-3);overflow:hidden}
   .heatfill{height:100%;border-radius:999px;transition:width .3s}
-  select,textarea,input{background:var(--bg-primary); color:var(--text-primary); border:1px solid var(--border); border-radius:8px; padding:.5rem .6rem; font:inherit}
+  select,textarea,input{background:var(--surface); color:var(--text); border:1px solid var(--border-2); border-radius:9px; padding:.5rem .65rem; font:inherit; box-shadow:var(--shadow-sm)}
+  input[type=checkbox]{box-shadow:none;accent-color:var(--accent)}
+  .btn{display:inline-flex;align-items:center;gap:.4rem;border-radius:9px;padding:.5rem .9rem;font-weight:700;font-size:.88rem;cursor:pointer;border:1px solid transparent}
+  .btn-primary{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+  .btn-primary:hover{filter:brightness(1.08)}
+  .btn-ghost{background:var(--surface);color:var(--text);border-color:var(--border-2);box-shadow:var(--shadow-sm)}
+  .btn-ghost:hover{background:var(--surface-2)}
   .note-input{width:100%; min-height:2.2rem; resize:vertical}
   .visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
-  .skip{position:absolute;left:-999px;top:0;background:var(--accent-green);color:#06210f;padding:.5rem .8rem;border-radius:0 0 8px 0;z-index:50}
+  .skip{position:absolute;left:-999px;top:0;background:var(--accent);color:var(--on-accent);padding:.5rem .8rem;border-radius:0 0 8px 0;z-index:50}
   .skip:focus{left:0}
+  .brandbar{height:4px;background:linear-gradient(90deg,var(--accent),var(--accent-2))}
 </style>
 </head>
 <body>
 <a href="#main" class="skip">Skip to content</a>
-<header class="surface" style="border-left:0;border-right:0;border-top:0">
-  <div style="max-width:1180px;margin:0 auto;padding:1rem 1.1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
-    <div>
-      <h1 style="margin:0;font-size:1.55rem">WC26 Bookings Desk</h1>
-      <p class="muted" style="margin:.15rem 0 0;font-size:.85rem">World Cup 2026 player-bookings analysis. Team discipline, matchup heat and a referee watchlist.</p>
+<div class="brandbar"></div>
+<header class="surface" style="border-left:0;border-right:0;border-top:0;box-shadow:none;position:sticky;top:0;z-index:20">
+  <div style="max-width:1180px;margin:0 auto;padding:.9rem 1.1rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;gap:.65rem">
+      <svg width="40" height="40" viewBox="0 0 64 64" aria-hidden="true" style="border-radius:11px;box-shadow:var(--shadow-sm);flex:none">
+        <defs><linearGradient id="hdrbg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4a1e6b"/><stop offset="1" stop-color="#23103a"/></linearGradient></defs>
+        <rect width="64" height="64" rx="15" fill="url(#hdrbg)"/>
+        <g transform="translate(33 34)">
+          <rect x="-6" y="-17" width="21" height="32" rx="4.5" fill="#e11d48" transform="rotate(16)"/>
+          <rect x="-15" y="-16" width="21" height="32" rx="4.5" fill="#f7c600" stroke="#23103a" stroke-width="1.4" transform="rotate(-10)"/>
+        </g>
+      </svg>
+      <div>
+        <h1 style="margin:0;font-size:1.32rem;line-height:1.05;letter-spacing:-.03em">Bookings Desk</h1>
+        <p class="muted" style="margin:.1rem 0 0;font-size:.78rem;font-weight:600;letter-spacing:.02em"><span style="color:var(--accent-2)">WORLD CUP 2026</span> · player bookings</p>
+      </div>
     </div>
-    <button id="themeToggle" class="surface-2" style="border:1px solid var(--border);border-radius:10px;padding:.5rem .8rem;cursor:pointer;color:var(--text-primary);font-weight:600" aria-pressed="false">
+    <button id="themeToggle" class="btn btn-ghost" aria-pressed="false" title="Toggle theme">
       <span aria-hidden="true">🌙</span> <span id="themeLabel">Dark</span>
     </button>
   </div>
 </header>
 
 <main id="main" style="max-width:1180px;margin:0 auto;padding:1rem 1.1rem 4rem">
-  <div role="tablist" aria-label="Sections" style="display:flex;gap:.3rem;border-bottom:1px solid var(--border);margin-bottom:1rem;flex-wrap:wrap">
+  <div role="tablist" aria-label="Sections" class="tabs" style="margin:.4rem 0 1.1rem">
     <button class="tabbtn" role="tab" id="tab-home" aria-controls="panel-home" aria-selected="true">Home</button>
     <button class="tabbtn" role="tab" id="tab-results" aria-controls="panel-results" aria-selected="false" tabindex="-1">Results</button>
     <button class="tabbtn" role="tab" id="tab-teams" aria-controls="panel-teams" aria-selected="false" tabindex="-1">Teams</button>
@@ -232,7 +265,7 @@
         <label style="display:flex;flex-direction:column;gap:.25rem;font-size:.8rem" class="muted">Stake
           <input id="pkStake" type="number" step="0.01" min="0" placeholder="10">
         </label>
-        <button type="submit" class="surface-2" style="border:1px solid var(--accent-green);color:var(--accent-green);border-radius:8px;padding:.55rem .9rem;font-weight:600;cursor:pointer">Add pick</button>
+        <button type="submit" class="btn btn-primary">Add pick</button>
       </form>
     </details>
     <div class="surface" style="border-radius:12px;padding:.8rem 1rem;margin-bottom:1rem;display:flex;flex-wrap:wrap;gap:.6rem;align-items:center">
@@ -241,11 +274,11 @@
         <p class="faint" style="margin:.15rem 0 0;font-size:.76rem">Load the 24 model calls as pending picks, then settle each as results come in. Add your own odds/stake per row if you want P/L.</p>
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:.4rem">
-        <button id="md1Results" class="surface-2" style="border:1px solid var(--accent-green);color:var(--accent-green);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">Load results (24)</button>
+        <button id="md1Results" class="btn btn-primary">Load results (24)</button>
         <button id="md1Scores" class="surface-2" style="border:1px solid var(--accent-blue);color:var(--accent-blue);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">Load correct scores (24)</button>
         <button id="md1Both" class="surface-2" style="border:1px solid var(--border);color:var(--text-primary);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">Load both</button>
         <button id="md1Export" class="surface-2" style="border:1px solid var(--accent-blue);color:var(--accent-blue);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">⬇ Export PNG</button>
-        <button id="md1Settle" class="surface-2" style="border:1px solid var(--accent-green);color:var(--accent-green);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">Settle from results</button>
+        <button id="md1Settle" class="btn btn-primary">Settle from results</button>
         <button id="md1Clear" class="surface-2" style="border:1px solid var(--danger);color:var(--danger);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">Clear MD1 picks</button>
       </div>
       <p id="md1Msg" class="muted" role="status" aria-live="polite" style="margin:0;font-size:.78rem;flex-basis:100%"></p>
@@ -2926,7 +2959,7 @@ function pitchFor(team,mode){
     ${rows}</div>`;
 }
 function modeBtn(id,label,on){
-  return `<button id="${id}" role="tab" aria-selected="${on}" style="padding:.35rem .7rem;border-radius:8px;border:1px solid ${on?'var(--accent-green)':'var(--border)'};background:${on?'rgba(34,197,94,.15)':'transparent'};color:${on?'var(--accent-green)':'var(--text-secondary)'};font-weight:600;cursor:pointer;font-size:.82rem">${label}</button>`;
+  return `<button id="${id}" role="tab" aria-selected="${on}" style="padding:.4rem .8rem;border-radius:8px;border:1px solid ${on?'var(--accent)':'var(--border-2)'};background:${on?'color-mix(in srgb,var(--accent) 14%,transparent)':'var(--surface)'};color:${on?'var(--accent)':'var(--text-2)'};font-weight:700;cursor:pointer;font-size:.82rem">${label}</button>`;
 }
 function renderPlayers(a,b){
   curMatch={a,b};
@@ -2944,7 +2977,7 @@ function renderPlayers(a,b){
         <div role="tablist" aria-label="Player data source" style="display:flex;gap:.3rem;flex-wrap:wrap">
           ${modeBtn("modeClub","Club form",m==="club")}${modeBtn("modeIntl","International",m==="intl")}
         </div>
-        <button id="exportBtn" class="surface-2" style="border:1px solid var(--accent-green);color:var(--accent-green);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer">⬇ Export PNG</button>
+        <button id="exportBtn" class="btn btn-primary">⬇ Export PNG</button>
       </div>
     </div>
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:.8rem">
@@ -3100,7 +3133,7 @@ function renderScorers(){
     }).join("");
     body=scorerTable(rows, "Group top scorer");
   }
-  const vb=(id,lbl,on)=>`<button id="${id}" role="tab" aria-selected="${on}" style="padding:.35rem .7rem;border-radius:8px;border:1px solid ${on?'var(--accent-blue)':'var(--border)'};background:${on?'rgba(59,130,246,.15)':'transparent'};color:${on?'var(--accent-blue)':'var(--text-secondary)'};font-weight:600;cursor:pointer;font-size:.82rem">${lbl}</button>`;
+  const vb=(id,lbl,on)=>`<button id="${id}" role="tab" aria-selected="${on}" style="padding:.4rem .8rem;border-radius:8px;border:1px solid ${on?'var(--accent)':'var(--border-2)'};background:${on?'color-mix(in srgb,var(--accent) 14%,transparent)':'var(--surface)'};color:${on?'var(--accent)':'var(--text-2)'};font-weight:700;cursor:pointer;font-size:.82rem">${lbl}</button>`;
   $("scorerOut").innerHTML=
     `<div class="surface" style="border-radius:12px;padding:.7rem 1rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap">
       <div style="min-width:0">
@@ -3122,11 +3155,15 @@ function renderScorers(){
 // ---- PNG export of the matchup card (pure canvas, no external assets) ----
 // ---- WC26 DESK card brand: palette + shared chrome for PNG exports ----
 const BRAND={
-  name:"WC26 DESK", tag:"WORLD CUP 2026 · STATS & ANGLES",
-  bg0:"#0a0e1c", bg1:"#16203c", ink:"#eef3ff", sub:"#9fb0cf", faint:"#5e6d8c",
-  panel:"#111a31", panelHi:"#16203c", line:"#28344f",
-  a1:"#c8ff4d", a2:"#2fe6c4", hot:"#ff3d6e", warn:"#ffb03a", good:"#34e08a", blue:"#4d8dff"
+  name:"BOOKINGS DESK", tag:"WORLD CUP 2026 · PLAYER BOOKINGS",
+  bg0:"#1a0e2b", bg1:"#2a1140", ink:"#f3eefb", sub:"#b8a6d0", faint:"#7c6f93",
+  panel:"#221634", panelHi:"#2c1d44", line:"#3a2b54",
+  a1:"#a78bfa", a2:"#ff2d7e", hot:"#ff3d6e", warn:"#ffb03a", good:"#34e08a", blue:"#7c8cff"
 };
+function drawCardsMark(x,cx,cy,h){ const w=h*0.66, rr=h*0.15; x.save(); x.translate(cx,cy);
+  x.save(); x.rotate(16*Math.PI/180); x.fillStyle="#e11d48"; roundRect(x,-w*0.15,-h/2,w,h,rr); x.fill(); x.restore();
+  x.save(); x.rotate(-10*Math.PI/180); x.fillStyle="#f7c600"; x.strokeStyle="rgba(20,8,32,.55)"; x.lineWidth=2.5; roundRect(x,-w*0.85,-h/2,w,h,rr); x.fill(); x.stroke(); x.restore();
+  x.restore(); }
 function heatHex(s){ return s>=7?BRAND.hot:s>=5?BRAND.warn:s>=3?BRAND.good:BRAND.faint; }
 function riskHex(r){ if(r==null)return BRAND.faint; return r>=2.5?BRAND.hot:r>=1.8?BRAND.warn:r>=1.2?BRAND.good:BRAND.sub; }
 function goalHex(g){ if(g==null)return BRAND.faint; return g>=0.7?BRAND.hot:g>=0.45?BRAND.warn:g>=0.25?BRAND.good:BRAND.sub; }
@@ -3134,19 +3171,18 @@ function accentGrad(x,x0,y0,x1,y1){ const g=x.createLinearGradient(x0,y0,x1,y1);
 function brandBg(x,W,H){
   const g=x.createLinearGradient(0,0,W*0.65,H); g.addColorStop(0,BRAND.bg0); g.addColorStop(1,BRAND.bg1);
   x.fillStyle=g; x.fillRect(0,0,W,H);
-  const rg=x.createRadialGradient(W,0,30,W,0,W*0.75); rg.addColorStop(0,"rgba(47,230,196,0.10)"); rg.addColorStop(1,"rgba(47,230,196,0)");
+  const rg=x.createRadialGradient(W,0,30,W,0,W*0.75); rg.addColorStop(0,"rgba(255,45,126,0.12)"); rg.addColorStop(1,"rgba(255,45,126,0)");
   x.fillStyle=rg; x.fillRect(0,0,W,H);
 }
 function brandHeader(x,W,P,label){
   const disp="'Bricolage Grotesque',sans-serif", body="'Hanken Grotesk',sans-serif";
   x.fillStyle=accentGrad(x,0,0,W,0); x.fillRect(0,0,W,5);
   const by=24, bs=40;
-  x.fillStyle=accentGrad(x,P,by,P+bs,by+bs); roundRect(x,P,by,bs,bs,11); x.fill();
-  x.fillStyle=BRAND.bg0; x.textAlign="center"; x.textBaseline="middle"; x.font=`800 18px ${disp}`; x.fillText("26",P+bs/2,by+bs/2+1);
-  x.textAlign="left"; x.textBaseline="alphabetic";
+  x.fillStyle="#2a1140"; roundRect(x,P,by,bs,bs,11); x.fill();
+  drawCardsMark(x,P+bs/2,by+bs/2,bs*0.62);
   const wx=P+bs+13;
-  x.font=`800 25px ${disp}`; x.fillStyle=BRAND.ink; x.fillText("WC26",wx,by+19);
-  x.fillStyle=BRAND.a1; x.fillText(" DESK",wx+x.measureText("WC26").width,by+19);
+  x.font=`800 25px ${disp}`; x.fillStyle=BRAND.ink; x.fillText("BOOKINGS",wx,by+19);
+  x.fillStyle=BRAND.a1; x.fillText(" DESK",wx+x.measureText("BOOKINGS").width,by+19);
   x.fillStyle=BRAND.faint; x.font=`700 10px ${body}`; x.fillText(BRAND.tag,wx,by+35);
   if(label){ const L=label.toUpperCase(); x.font=`800 12px ${body}`; const tw=x.measureText(L).width, pw=tw+26, px=W-P-pw, py=by+6;
     x.fillStyle="rgba(47,230,196,0.12)"; roundRect(x,px,py,pw,28,14); x.fill();
@@ -3158,7 +3194,7 @@ function brandFooter(x,W,H,P,note){
   const body="'Hanken Grotesk',sans-serif";
   x.strokeStyle=BRAND.line; x.lineWidth=1; x.beginPath(); x.moveTo(P,H-48); x.lineTo(W-P,H-48); x.stroke();
   x.fillStyle=BRAND.a1; roundRect(x,P,H-39,7,8,2); x.fill();
-  x.fillStyle=BRAND.sub; x.font=`800 13px ${body}`; x.fillText("WC26 DESK",P+13,H-31);
+  x.fillStyle=BRAND.sub; x.font=`800 13px ${body}`; x.fillText("BOOKINGS DESK",P+13,H-31);
   x.fillStyle=BRAND.faint; x.font=`500 11px ${body}`; x.fillText(note||"Built for research, not a betting guarantee.",P,H-13);
   x.textAlign="right"; x.fillStyle=BRAND.faint; x.fillText("18+ · Stake responsibly",W-P,H-31); x.textAlign="left";
 }
@@ -3344,7 +3380,7 @@ themeToggle.addEventListener("click",()=>{
   try{ localStorage.setItem(THEME_KEY,next); }catch(e){}
   applyTheme(next);
 });
-applyTheme((()=>{ try{ return localStorage.getItem(THEME_KEY)||"dark"; }catch(e){ return "dark"; } })());
+applyTheme((()=>{ try{ return localStorage.getItem(THEME_KEY)||"light"; }catch(e){ return "light"; } })());
 
 // ---- pick tracker ----
 const STATUSES=["pending","won","lost","void"];
