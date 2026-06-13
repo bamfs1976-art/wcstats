@@ -76,6 +76,7 @@
 <main id="main" style="max-width:1180px;margin:0 auto;padding:1rem 1.1rem 4rem">
   <div role="tablist" aria-label="Sections" style="display:flex;gap:.3rem;border-bottom:1px solid var(--border);margin-bottom:1rem;flex-wrap:wrap">
     <button class="tabbtn" role="tab" id="tab-home" aria-controls="panel-home" aria-selected="true">Home</button>
+    <button class="tabbtn" role="tab" id="tab-results" aria-controls="panel-results" aria-selected="false" tabindex="-1">Results</button>
     <button class="tabbtn" role="tab" id="tab-teams" aria-controls="panel-teams" aria-selected="false" tabindex="-1">Teams</button>
     <button class="tabbtn" role="tab" id="tab-matchups" aria-controls="panel-matchups" aria-selected="false" tabindex="-1">Matchups</button>
     <button class="tabbtn" role="tab" id="tab-goals" aria-controls="panel-goals" aria-selected="false" tabindex="-1">Goals</button>
@@ -89,6 +90,11 @@
   <!-- HOME -->
   <section id="panel-home" role="tabpanel" aria-labelledby="tab-home">
     <div id="homeOut"></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section id="panel-results" role="tabpanel" aria-labelledby="tab-results" hidden>
+    <div id="resultsOut"></div>
   </section>
 
   <!-- TEAMS -->
@@ -3524,8 +3530,80 @@ fillIntelSelect();
 renderRefs();
 renderTracker();
 
+// ---- played-match data (keyed by fixture; arrays are [teamA, teamB] in fixture display order) ----
+// Stats from public match reports/Opta; null where a figure wasn't reliably available.
+const RESULTS={
+  "MEX|RSA":{s:"2-0",ga:["Quiñones 9'","Jiménez 66'"],gb:[],poss:[null,null],sh:[16,3],sot:[4,2],cor:[null,null],fl:[null,null],yc:[null,null],rc:[1,2],note:"Three red cards: Montes (MEX); Sithole, Zwane (RSA). Jiménez on target — Super Boost landed."},
+  "CZE|KOR":{s:"1-2",ga:["Krejčí"],gb:["Hwang In-beom","Oh Hyeon-gyu"],poss:[null,null],sh:[null,null],sot:[null,null],cor:[null,null],fl:[null,null],yc:[null,1],rc:[0,0],note:"Korea came from 0-1 down; Krejčí headed in a Coufal long throw. Lee Gi-hyuk booked."},
+  "BIH|CAN":{s:"1-1",ga:["Lukić"],gb:["Larin 78'"],poss:[32,68],sh:[8,13],sot:[3,4],cor:[null,9],fl:[10,20],yc:[2,1],rc:[0,0],note:"Sub Larin rescued Canada's first-ever WC point. Demirović & Lukić booked (BIH); Johnston (CAN)."},
+  "PAR|USA":{s:"1-4",ga:["Mauricio 73'"],gb:["Bobadilla 7' (og)","Balogun 31'","Balogun 45+5'","Reyna 90+8'"],poss:[null,59],sh:[9,16],sot:[1,6],cor:[1,3],fl:[17,13],yc:[5,1],rc:[0,0],note:"Record USA WC win; Balogun brace. Paraguay 5 yellows. Ream yellow overturned by VAR."},
+};
 // ---- home / landing: hero of upcoming matches + stat summary ----
 function predForKey(k){ return MD1_PREDICTIONS.find(p=>[p.a,p.b].sort().join("|")===k); }
+function gradePrediction(k){
+  const d=RESULTS[k], p=predForKey(k); if(!d||!p) return null;
+  const cs=k.split("|"), A=teamByCode(p.a), B=teamByCode(p.b);
+  const [ga,gb]=d.s.split("-").map(Number);
+  const aw=ga>gb?"a":gb>ga?"b":"d";
+  const pw=p.r==="Draw"?"d":(A&&p.r===A.n?"a":"b");
+  return {resultHit:pw===aw, scoreHit:p.s===d.s};
+}
+function resStatLine(label,a,b,suf){
+  if(a==null&&b==null) return "";
+  const av=a==null?"—":a+(suf||""), bv=b==null?"—":b+(suf||"");
+  const aHi=(a!=null&&b!=null&&a>b), bHi=(a!=null&&b!=null&&b>a);
+  return `<div style="display:flex;align-items:center;gap:.5rem;padding:.22rem 0">
+    <span class="num" style="width:48px;font-weight:${aHi?800:500};color:${aHi?'var(--text-primary)':'var(--text-secondary)'}">${av}</span>
+    <span class="faint" style="flex:1;text-align:center;font-size:.7rem;text-transform:uppercase;letter-spacing:.04em">${label}</span>
+    <span class="num" style="width:48px;text-align:right;font-weight:${bHi?800:500};color:${bHi?'var(--text-primary)':'var(--text-secondary)'}">${bv}</span>
+  </div>`;
+}
+function resultCard(k){
+  const d=RESULTS[k], fx=FIXTURES[k], p=predForKey(k), cs=k.split("|");
+  const A=teamByCode(p?p.a:cs[0]), B=teamByCode(p?p.b:cs[1]); if(!A||!B) return "";
+  const [ga,gb]=d.s.split("-").map(Number);
+  const g=gradePrediction(k);
+  const badge=(ok)=>ok?'<span style="color:var(--accent-green);font-weight:700">✓</span>':'<span style="color:var(--danger);font-weight:700">✗</span>';
+  const grade=g?`<span style="font-size:.76rem;display:inline-flex;gap:.6rem;align-items:center">${badge(g.resultHit)} result ${badge(g.scoreHit)} score <span class="faint">· pick ${esc(p.r)} ${esc(p.s.replace("-","–"))}</span></span>`:"";
+  const scList=(arr)=>arr&&arr.length?arr.map(s=>`<div>${esc(s)}</div>`).join(""):'<div class="faint">—</div>';
+  return `<div class="surface" style="border-radius:14px;padding:1rem 1.1rem;margin-bottom:1rem">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
+      <span class="chip surface-2" style="border:1px solid var(--border)">FT · Grp ${A.g} · Match ${fx.m}</span>
+      ${grade}
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:1rem;margin:.7rem 0 .5rem;font-family:'Bricolage Grotesque',sans-serif">
+      <div style="flex:1;text-align:right;font-weight:700;font-size:1.05rem">${esc(A.n)} ${crest(A,20)}</div>
+      <div class="display" style="font-size:1.9rem;min-width:74px;text-align:center">${ga}–${gb}</div>
+      <div style="flex:1;text-align:left;font-weight:700;font-size:1.05rem">${crest(B,20)} ${esc(B.n)}</div>
+    </div>
+    <div style="display:flex;gap:.8rem;font-size:.82rem;margin-bottom:.6rem">
+      <div style="flex:1;text-align:right">${scList(d.ga)}</div>
+      <div class="faint" style="flex:none">⚽</div>
+      <div style="flex:1">${scList(d.gb)}</div>
+    </div>
+    <div class="surface-2" style="border-radius:10px;padding:.5rem .85rem">
+      ${resStatLine("Possession",d.poss[0],d.poss[1],"%")}
+      ${resStatLine("Shots",d.sh[0],d.sh[1])}
+      ${resStatLine("On target",d.sot[0],d.sot[1])}
+      ${resStatLine("Corners",d.cor[0],d.cor[1])}
+      ${resStatLine("Fouls",d.fl[0],d.fl[1])}
+      ${resStatLine("Yellow cards",d.yc[0],d.yc[1])}
+      ${resStatLine("Red cards",d.rc[0],d.rc[1])}
+    </div>
+    <p class="faint" style="font-size:.74rem;margin:.55rem 0 0">${d.note?esc(d.note)+" ":""}${fx&&fx.ref?`· 🧑‍⚖️ ${esc(fx.ref)}`:""}</p>
+  </div>`;
+}
+function renderResults(){
+  const keys=Object.keys(RESULTS).sort((a,b)=>(FIXTURES[b]?FIXTURES[b].d:"").localeCompare(FIXTURES[a]?FIXTURES[a].d:""));
+  const out=$("resultsOut");
+  if(!keys.length){ out.innerHTML='<p class="muted" style="padding:.5rem">No completed matches yet.</p>'; return; }
+  const graded=keys.map(gradePrediction).filter(Boolean);
+  const rh=graded.filter(x=>x.resultHit).length, sh=graded.filter(x=>x.scoreHit).length;
+  out.innerHTML=`<div class="surface" style="border-radius:12px;padding:.85rem 1.1rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:.5rem">
+      <div><h2 style="margin:0;font-size:1.2rem">Results so far</h2><p class="muted" style="margin:.2rem 0 0;font-size:.82rem">${keys.length} matches played · full-time data, scorers and the model's grade.</p></div>
+      <span class="chip surface-2" style="border:1px solid var(--border)">Model: ${rh}/${graded.length} results · ${sh}/${graded.length} scores</span>
+    </div>`+keys.map(resultCard).join("");
+}
 function homeMatchCard(entry,featured){
   const {k,fx}=entry, p=predForKey(k), cs=k.split("|");
   const A=teamByCode(p?p.a:cs[0]), B=teamByCode(p?p.b:cs[1]);
@@ -3566,8 +3644,8 @@ function homeStat(label,val,sub,col){
 function renderHome(){
   const now=Date.now();
   const all=Object.entries(FIXTURES).map(([k,fx])=>{ const d=shiftUTC(fx.d,0); return {k,fx,t:d?d.getTime():Infinity}; }).sort((a,b)=>a.t-b.t);
-  let up=all.filter(x=>x.t>=now-2.5*3600000);
-  if(!up.length) up=all;
+  let up=all.filter(x=>x.t>=now-2.5*3600000 && !RESULTS[x.k]);
+  if(!up.length) up=all.filter(x=>!RESULTS[x.k]);
   const slate=up.slice(0,6), featured=slate[0];
   const next24=up.filter(x=>x.t<now+24*3600000).length;
   const hottest=up.map(x=>{ const cs=x.k.split("|"),A=teamByCode(cs[0]),B=teamByCode(cs[1]); return A&&B?{x,h:heatScore(A,B).score}:null; }).filter(Boolean).sort((a,b)=>b.h-a.h)[0];
@@ -3598,6 +3676,23 @@ function renderHome(){
       ${homeStat("Ref to watch",topRef?esc(topRef.n):"—",topRef?`${topRef.ypg.toFixed(1)} yel/game`:"","var(--warn)")}
       ${homeStat("The field","48","teams · 12 groups")}
     </div>
+    ${(()=>{
+      const rk=Object.keys(RESULTS).sort((a,b)=>(FIXTURES[b]?FIXTURES[b].d:"").localeCompare(FIXTURES[a]?FIXTURES[a].d:""));
+      if(!rk.length) return "";
+      const gr=rk.map(gradePrediction).filter(Boolean), rh=gr.filter(x=>x.resultHit).length, sh=gr.filter(x=>x.scoreHit).length;
+      const bdg=ok=>ok?'<span style="color:var(--accent-green)">✓</span>':'<span style="color:var(--danger)">✗</span>';
+      const rows=rk.slice(0,4).map(k=>{ const d=RESULTS[k],p=predForKey(k),cs=k.split("|"),A=teamByCode(p?p.a:cs[0]),B=teamByCode(p?p.b:cs[1]),g=gradePrediction(k);
+        return `<div style="display:flex;align-items:center;gap:.6rem;padding:.4rem .15rem;border-top:1px solid var(--border);font-size:.85rem">
+          <span class="num display" style="min-width:48px;flex:none">${esc(d.s.replace("-","–"))}</span>
+          <span style="flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${crest(A,14)} ${esc(A.n)} <span class="faint" style="font-weight:400">v</span> ${crest(B,14)} ${esc(B.n)}</span>
+          ${g?`<span style="flex:none;font-size:.8rem;letter-spacing:.1em">${bdg(g.resultHit)}${bdg(g.scoreHit)}</span>`:""}
+        </div>`; }).join("");
+      return `<div class="surface" style="border-radius:14px;padding:.9rem 1.1rem;margin-bottom:1rem">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;flex-wrap:wrap">
+          <h3 style="margin:0;font-size:1.05rem">✅ Results so far</h3>
+          <span class="faint" style="font-size:.76rem">${rk.length} played · model ${rh}/${gr.length} results, ${sh}/${gr.length} scores · <button data-goto="tab-results" style="background:none;border:0;color:var(--accent-blue);cursor:pointer;font:inherit;padding:0">full data →</button></span>
+        </div>${rows}</div>`;
+    })()}
     <div class="surface" style="border-radius:14px;padding:.9rem 1.1rem;margin-bottom:1rem">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:.6rem;flex-wrap:wrap">
         <h3 style="margin:0;font-size:1.05rem">🔥 Hottest matches · 7.5+</h3>
@@ -3611,11 +3706,12 @@ function renderHome(){
       ${slate.slice(1).map(e=>homeMatchCard(e,false)).join("")}
     </div>
     <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:1.1rem">
-      ${[["matchups","Matchup heat"],["goals","Goal markets"],["scorers","Golden Boot"],["intel","Team intel"],["tracker","My picks"]].map(([id,lbl])=>`<button data-goto="tab-${id}" class="surface-2" style="border:1px solid var(--border);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer;color:var(--text-primary)">${lbl} →</button>`).join("")}
+      ${[["results","Results"],["matchups","Matchup heat"],["goals","Goal markets"],["scorers","Golden Boot"],["intel","Team intel"],["tracker","My picks"]].map(([id,lbl])=>`<button data-goto="tab-${id}" class="surface-2" style="border:1px solid var(--border);border-radius:8px;padding:.5rem .8rem;font-weight:600;cursor:pointer;color:var(--text-primary)">${lbl} →</button>`).join("")}
     </div>`;
   $("homeOut").querySelectorAll("[data-goto]").forEach(b=>b.addEventListener("click",()=>{ const t=document.getElementById(b.dataset.goto); if(t){ selectTab(t); t.focus(); } }));
 }
 renderHome();
+renderResults();
 </script>
 </body>
 </html>
