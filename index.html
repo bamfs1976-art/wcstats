@@ -2760,6 +2760,11 @@ const REFS = [
   {n:"Tori Penso", c:"USA", ypg:3.3, sample:"", note:"3.3 yellows/game. WC2026: Czechia v South Africa."},
   {n:"Pierre Atcho", c:"Gabon", ypg:3.6, sample:"", note:"~3.6 yellows/game. WC2026: Panama v Croatia."},
   {n:"Drew Fischer", c:"Canada", ypg:3.4, sample:"", note:"3.35 yellows/game; MLS top referee. WC2026: France v Iraq."},
+  {n:"Abdulrahman Al Jassim", c:"Qatar", ypg:4.4, sample:"", note:"~4.4 yellows/game. 2022 World Cup final referee. Officiating at WC2026."},
+  {n:"Anthony Taylor", c:"England", ypg:3.8, sample:"", note:"~3.8 yellows/game, PGMOL elite. Officiating at WC2026."},
+  {n:"Dahane Beida", c:"Mauritania", ypg:4.1, sample:"", note:"~4.1 yellows/game. Officiating at WC2026."},
+  {n:"Glenn Nyberg", c:"Sweden", ypg:3.4, sample:"", note:"~3.4 yellows/game, UEFA elite. Officiating at WC2026."},
+  {n:"Clément Turpin", c:"France", ypg:3.3, sample:"", note:"~3.3 yellows/game, UEFA elite. Officiating at WC2026."},
 ];
 
 const MAX_CA = 3.1, MAX_FM = 15.4;
@@ -3335,16 +3340,38 @@ function roundRect(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo
 function renderTournRefs(){
   const wrap=$("tournRefOut"); if(!wrap||typeof TOURN_REFS==="undefined"||!TOURN_REFS.length) return;
   const cpmCol=v=>v>=5?"var(--danger)":v>=4?"var(--warn)":v>=3?"var(--good)":"var(--text-2)";
-  const rows=[...TOURN_REFS].sort((a,b)=>b.cpm-a.cpm).map(r=>
-    `<tr><td style="padding:.45rem .7rem">${esc(r.n)}</td>`+
+  // reconcile each live ref against the career watchlist (REFS) by accent-insensitive name
+  const refKey=s=>(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[\u2019']/g,"").replace(/[^a-z0-9]+/g," ").trim();
+  const baseFor=r=>{
+    if(typeof REFS==="undefined") return null;
+    const t=refKey(r.n.replace(/\s*\([^)]*\)\s*$/,"")), tt=t.split(" ");
+    let m=REFS.find(x=>refKey(x.n)===t); if(m) return m;        // exact (punctuation-insensitive)
+    return REFS.find(x=>{ const xt=refKey(x.n).split(" "); if(xt[0]!==tt[0]) return false; // same first name
+      const small=xt.length<=tt.length?xt:tt, big=new Set(xt.length<=tt.length?tt:xt);
+      return small.every(tok=>big.has(tok)); })||null;          // shorter name's tokens ⊆ longer
+  };
+  const rows=[...TOURN_REFS].sort((a,b)=>b.cpm-a.cpm).map(r=>{
+    const base=baseFor(r);
+    const sfx=(r.n.match(/\s*(\([^)]*\))\s*$/)||[,""])[1];
+    const name=base?esc(base.n)+(sfx?" "+sfx:""):esc(r.n);
+    let career='<span class="faint">—</span>';
+    if(base&&base.ypg!=null){
+      const ypm=r.m?r.y/r.m:0, d=ypm-base.ypg;
+      const col=d>=1?"var(--danger)":d<=-1?"var(--good)":"var(--text-2)";
+      const arr=d>=1?"▲":d<=-1?"▼":"▬";
+      career=`<span class="num">${base.ypg.toFixed(1)}</span> <span style="color:${col};font-size:.76rem" title="live yellows/match vs career">${arr}${d>=0?"+":""}${d.toFixed(1)}</span>`;
+    }
+    return `<tr><td style="padding:.45rem .7rem">${name}</td>`+
     `<td style="text-align:center" class="num muted">${r.m}</td>`+
     `<td style="text-align:center" class="num">${r.y}</td>`+
     `<td style="text-align:center" class="num">${r.rc?'<span style="color:var(--danger)">'+r.rc+'</span>':'<span class="faint">–</span>'}</td>`+
-    `<td style="text-align:right"><span class="display num" style="font-size:1.02rem;color:${cpmCol(r.cpm)}">${r.cpm.toFixed(2)}</span></td></tr>`).join("");
+    `<td style="text-align:right"><span class="display num" style="font-size:1.02rem;color:${cpmCol(r.cpm)}">${r.cpm.toFixed(2)}</span></td>`+
+    `<td style="text-align:right">${career}</td></tr>`;
+  }).join("");
   wrap.innerHTML=
     `<div class="surface" style="border-radius:12px;padding:.7rem 1rem;margin-bottom:1rem">
       <h2 style="margin:0;font-size:1.05rem">Referee strictness · this tournament</h2>
-      <p class="muted" style="margin:.25rem 0 0;font-size:.8rem">Actual cards per match from ${typeof TOURN_MATCHES!=="undefined"?TOURN_MATCHES:"the"} matches played. Officials via football-data.org, cards from post-match reports.</p>
+      <p class="muted" style="margin:.25rem 0 0;font-size:.8rem">Actual cards per match from ${typeof TOURN_MATCHES!=="undefined"?TOURN_MATCHES:"the"} matches played. Officials via football-data.org, cards from post-match reports. The career column is each ref's pre-tournament yellows/game from the watchlist below, with ▲/▼ showing whether they're carding above or below it.</p>
     </div>
     <div class="surface" style="border-radius:12px;overflow:auto;margin-bottom:1.4rem;max-height:60vh">
       <table><caption class="visually-hidden">Tournament referee strictness</caption><thead><tr>
@@ -3353,6 +3380,7 @@ function renderTournRefs(){
         <th scope="col" style="text-align:center;padding:.6rem .5rem">🟨</th>
         <th scope="col" style="text-align:center;padding:.6rem .5rem">🟥</th>
         <th scope="col" style="text-align:right;padding:.6rem .7rem">Cards / match</th>
+        <th scope="col" style="text-align:right;padding:.6rem .7rem">Career 🟨/g</th>
       </tr></thead><tbody>${rows}</tbody></table>
     </div>`;
 }
