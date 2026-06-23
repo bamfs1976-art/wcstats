@@ -2834,11 +2834,18 @@ function teamStakes(code){
 // Fixture stakes adjustment to the heat score. Centred so one motivated side
 // is neutral; two desperate sides push up, two safe or dead sides pull down.
 // Damped before the final round, when the table has not yet hardened.
+// jeopardy: single source of truth — delegates to the live standings engine
+// (jGroupTable/jStatus/jStakes) shared with the Jeopardy tab, so the Matchups
+// stakes delta always matches the board. teamStakes() below is now superseded.
 function jeopardy(a,b){
-  const sa=teamStakes(a.c), sb=teamStakes(b.c); if(!sa||!sb) return null;
-  const weight=(sa.left===1&&sb.left===1)?1:0.5;
-  let delta=clamp((sa.drive+sb.drive-1.0)*1.2*weight,-1.0,1.5);
-  return {delta,a:sa,b:sb,decider:(sa.left===1&&sb.left===1)};
+  if(!a||!b||a.g!==b.g||typeof jGroupTable!=="function") return null;
+  const codes=TEAMS.filter(t=>t.g===a.g).map(t=>t.c);
+  const {t,rem}=jGroupTable(codes);
+  if(!(codes.every(c=>t[c].pl>=2)&&rem.length===2)) return null; // only at the final round
+  const st=jStatus(codes,t,rem), sa=st[a.c], sb=st[b.c];
+  const lab={through:["Through","safe"],alive:["Win to qualify","hot"],out:["Eliminated","muted"]};
+  return {delta:jStakes(sa,sb)[1], decider:(sa==="alive"&&sb==="alive"),
+          a:{label:lab[sa][0],tone:lab[sa][1]}, b:{label:lab[sb][0],tone:lab[sb][1]}};
 }
 const MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 // shift a stored UTC datetime 'YYYY-MM-DD HH:MM' by offset hours, return a Date
