@@ -3862,7 +3862,10 @@ renderStandings();
 renderKnockout();
 renderTracker();
 renderJeopardy();
-function jScore(key){ if(typeof FD_RESULTS!=="undefined"&&FD_RESULTS[key]) return FD_RESULTS[key]; if(RESULTS[key]&&RESULTS[key].auto) return RESULTS[key].s; return SCORES[key]||null; }
+function jScore(key){ try{ if(typeof FD_RESULTS!=="undefined"&&FD_RESULTS[key]) return FD_RESULTS[key]; if(typeof RESULTS!=="undefined"&&RESULTS[key]&&RESULTS[key].auto) return RESULTS[key].s; return (typeof SCORES!=="undefined"&&SCORES[key])||null; }catch(e){ return null; } }
+// ^ fail soft: if the score data isn't ready yet (e.g. an init-order slip leaves
+// RESULTS/SCORES in their temporal dead zone), return null rather than throw, so a
+// fixture is treated as not-yet-played instead of blanking the whole page.
 function jGroupTable(codes){
   const t={}; codes.forEach(c=>t[c]={c,pts:0,gf:0,ga:0,pl:0});
   const rem=[];
