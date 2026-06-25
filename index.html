@@ -3809,6 +3809,45 @@ const FD_KNOCKOUT=[
   {st:"THIRD_PLACE",d:"2026-07-18 21:00",hc:null,hf:"",hn:null,ac:null,af:"",an:null,sc:null,status:"TIMED"},
   {st:"FINAL",d:"2026-07-19 19:00",hc:null,hf:"",hn:null,ac:null,af:"",an:null,sc:null,status:"TIMED"},
 ];
+// Bracket metadata from the official WC26 knockout schedule, keyed by the UTC kick-off
+// (unique per tie) so it joins cleanly onto FD_KNOCKOUT without the FD pipeline clobbering it.
+// slH/slA = the bracket slot each side feeds from (A1 = Group A winner, A2 = runner-up, 3rd = best
+// third-placed, W## = winner of match ##, L## = loser). Confirmed teams (hn/an/hf/af/ref) override
+// the slot text once known. Refs filled as FIFA appoints them.
+const KO_META={
+  "2026-06-28 19:00":{m:73,v:"Los Angeles",slH:"A 2nd",slA:"B 2nd",hn:"South Africa",hf:"🇿🇦",an:"Canada",af:"🇨🇦",ref:"João Pinheiro (POR)"},
+  "2026-06-29 17:00":{m:76,v:"Houston",slH:"C 1st",slA:"F 2nd"},
+  "2026-06-29 20:30":{m:74,v:"Foxborough",slH:"E 1st",slA:"3rd A/B/C/D/F"},
+  "2026-06-30 01:00":{m:75,v:"Monterrey",slH:"F 1st",slA:"C 2nd"},
+  "2026-06-30 17:00":{m:78,v:"Arlington",slH:"E 2nd",slA:"I 2nd"},
+  "2026-06-30 21:00":{m:77,v:"New York/NJ",slH:"I 1st",slA:"3rd C/D/F/G/H"},
+  "2026-07-01 01:00":{m:79,v:"Mexico City",slH:"A 1st",slA:"3rd C/E/F/H/I"},
+  "2026-07-01 16:00":{m:80,v:"Atlanta",slH:"L 1st",slA:"3rd E/H/I/J/K"},
+  "2026-07-01 20:00":{m:82,v:"Seattle",slH:"G 1st",slA:"3rd A/E/H/I/J"},
+  "2026-07-02 00:00":{m:81,v:"San Francisco",slH:"D 1st",slA:"3rd B/E/F/I/J"},
+  "2026-07-02 19:00":{m:84,v:"Los Angeles",slH:"H 1st",slA:"J 2nd"},
+  "2026-07-02 23:00":{m:83,v:"Toronto",slH:"K 2nd",slA:"L 2nd"},
+  "2026-07-03 03:00":{m:85,v:"Vancouver",slH:"B 1st",slA:"3rd E/F/G/I/J"},
+  "2026-07-03 18:00":{m:88,v:"Arlington",slH:"D 2nd",slA:"G 2nd"},
+  "2026-07-03 22:00":{m:86,v:"Miami",slH:"J 1st",slA:"H 2nd"},
+  "2026-07-04 01:30":{m:87,v:"Kansas City",slH:"K 1st",slA:"3rd D/E/I/J/L"},
+  "2026-07-04 17:00":{m:90,v:"Houston",slH:"W73",slA:"W75"},
+  "2026-07-04 21:00":{m:89,v:"Philadelphia",slH:"W74",slA:"W77"},
+  "2026-07-05 20:00":{m:91,v:"New York/NJ",slH:"W76",slA:"W78"},
+  "2026-07-06 00:00":{m:92,v:"Mexico City",slH:"W79",slA:"W80"},
+  "2026-07-06 19:00":{m:93,v:"Arlington",slH:"W83",slA:"W84"},
+  "2026-07-07 00:00":{m:94,v:"Seattle",slH:"W81",slA:"W82"},
+  "2026-07-07 16:00":{m:95,v:"Atlanta",slH:"W86",slA:"W88"},
+  "2026-07-07 20:00":{m:96,v:"Vancouver",slH:"W85",slA:"W87"},
+  "2026-07-09 20:00":{m:97,v:"Foxborough",slH:"W89",slA:"W90"},
+  "2026-07-10 19:00":{m:98,v:"Los Angeles",slH:"W93",slA:"W94"},
+  "2026-07-11 21:00":{m:99,v:"Miami",slH:"W91",slA:"W92"},
+  "2026-07-12 01:00":{m:100,v:"Kansas City",slH:"W95",slA:"W96"},
+  "2026-07-14 19:00":{m:101,v:"Arlington",slH:"W97",slA:"W98"},
+  "2026-07-15 19:00":{m:102,v:"Atlanta",slH:"W99",slA:"W100"},
+  "2026-07-18 21:00":{m:103,v:"Miami",slH:"L101",slA:"L102"},
+  "2026-07-19 19:00":{m:104,v:"New York/NJ",slH:"W101",slA:"W102"},
+};
 
 function renderKnockout(){
   var wrap=document.getElementById('knockoutOut'); if(!wrap||typeof FD_KNOCKOUT==='undefined') return;
@@ -3816,11 +3855,19 @@ function renderKnockout(){
   var byStage={}; FD_KNOCKOUT.forEach(function(m){ (byStage[m.st]=byStage[m.st]||[]).push(m); });
   var fmt=function(d){ try{ return fmtFixture({d:d}); }catch(e){ return d; } };
   var side=function(c,f,n){ return c?((f?f+' ':'')+esc(n)):'<span class="faint">TBD</span>'; };
-  var head='<div class="surface" style="border-radius:12px;padding:.7rem 1rem;margin-bottom:1rem"><h2 style="margin:0;font-size:1.05rem">Knockout bracket</h2><p class="muted" style="margin:.25rem 0 0;font-size:.8rem">Schedule from football-data.org, 28 Jun to 19 Jul. Teams fill in as the groups finish and scores update on refresh. Kick-offs in BST, with Seychelles time added for the 5 to 14 July window.</p></div>';
+  var meta=function(m){ return (typeof KO_META!=='undefined'&&KO_META[m.d])||{}; };
+  // a side shows the confirmed team if known, otherwise the bracket slot it feeds from
+  var sideK=function(c,f,n,slot){ return (c||n)?((f?f+' ':'')+esc(n)):'<span class="faint">'+esc(slot||'TBD')+'</span>'; };
+  var head='<div class="surface" style="border-radius:12px;padding:.7rem 1rem;margin-bottom:1rem"><h2 style="margin:0;font-size:1.05rem">Knockout bracket</h2><p class="muted" style="margin:.25rem 0 0;font-size:.8rem">Full 32-tie schedule, 28 Jun to 19 Jul. Slots: A1 = Group A winner, A2 = runner-up, 3rd = best third-placed, W## = winner of match ##. Teams &amp; referees fill in as ties confirm; kick-offs shown in your local time.</p></div>';
   var sections=order.filter(function(s){return byStage[s];}).map(function(s){
     var rows=byStage[s].map(function(m){
+      var x=meta(m);
+      var hn=m.hn||x.hn, hf=m.hf||x.hf, an=m.an||x.an, af=m.af||x.af;
       var right=m.sc?('<span class="num"><strong>'+m.sc+'</strong></span>'):'<span class="faint num" style="font-size:.76rem">'+fmt(m.d)+'</span>';
-      return '<div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem;padding:.45rem .75rem;border-top:1px solid var(--border)"><span>'+side(m.hc,m.hf,m.hn)+' <span class="faint">v</span> '+side(m.ac,m.af,m.an)+'</span>'+right+'</div>';
+      var tag=x.m?('<span class="faint num" style="font-size:.66rem">M'+x.m+'</span> '):'';
+      var sub=[x.v,x.ref].filter(Boolean).map(esc).join(' · ');
+      var subline=sub?'<div class="faint" style="font-size:.66rem;margin-top:.15rem">'+sub+'</div>':'';
+      return '<div style="padding:.45rem .75rem;border-top:1px solid var(--border)"><div style="display:flex;justify-content:space-between;align-items:center;gap:.6rem"><span>'+tag+sideK(m.hc,hf,hn,x.slH)+' <span class="faint">v</span> '+sideK(m.ac,af,an,x.slA)+'</span>'+right+'</div>'+subline+'</div>';
     }).join('');
     return '<div class="surface" style="border-radius:12px;overflow:hidden;margin-bottom:.9rem"><div style="padding:.5rem .75rem;font-weight:700;font-family:Bricolage Grotesque,sans-serif;border-bottom:1px solid var(--border);display:flex;justify-content:space-between"><span>'+((typeof FD_STAGE_LABELS!=='undefined'&&FD_STAGE_LABELS[s])||s)+'</span><span class="faint" style="font-weight:600;font-size:.76rem">'+byStage[s].length+' ties</span></div>'+rows+'</div>';
   }).join('');
