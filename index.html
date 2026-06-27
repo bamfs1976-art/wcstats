@@ -145,6 +145,7 @@
 
   <!-- KNOCKOUT -->
   <section id="panel-knockout" role="tabpanel" aria-labelledby="tab-knockout" hidden>
+    <div id="koHeatOut"></div>
     <div id="knockoutOut"></div>
   </section>
 
@@ -3852,6 +3853,77 @@ const KO_META={
   "2026-07-19 19:00":{m:104,v:"New York/NJ",slH:"W101",slA:"W102"},
 };
 
+function renderKoHeat(){
+  var wrap=document.getElementById('koHeatOut'); if(!wrap||typeof KO_META==='undefined') return;
+  // build lookup: normalised ref name → TOURN_REFS entry
+  var tMap={};
+  if(typeof TOURN_REFS!=='undefined') TOURN_REFS.forEach(function(r){
+    var name=r.n.replace(/\s*\(.*\)$/,'').trim();
+    tMap[name.toLowerCase()]=r;
+    tMap[name.split(' ').pop().toLowerCase()]=r;
+  });
+  // build lookup: normalised ref name → REFS watchlist entry
+  var rMap={};
+  if(typeof REFS!=='undefined') REFS.forEach(function(r){ rMap[r.n.toLowerCase()]=r; });
+  function lookupRef(refStr){
+    if(!refStr) return {t:null,r:null};
+    var name=refStr.replace(/\s*\(.*\)$/,'').trim(), low=name.toLowerCase();
+    var last=name.split(' ').pop().toLowerCase();
+    var t=tMap[low]||tMap[last]||null;
+    if(!t){ for(var k in tMap){ if(k.indexOf(last)>=0){ t=tMap[k]; break; } } }
+    var r=rMap[low]||null;
+    if(!r){ for(var k2 in rMap){ if(rMap[k2].n.toLowerCase().indexOf(last)>=0){ r=rMap[k2]; break; } } }
+    return {t:t,r:r};
+  }
+  function heatColor(v){
+    if(v===null||v===undefined) return '#6b7280';
+    if(v>=5) return '#dc2626';
+    if(v>=4) return '#ea580c';
+    if(v>=3.5) return '#d97706';
+    if(v>=3) return '#ca8a04';
+    if(v>=2) return '#65a30d';
+    return '#16a34a';
+  }
+  function stageLbl(m){
+    if(m>=73&&m<=88) return 'R32';
+    if(m>=89&&m<=96) return 'R16';
+    if(m>=97&&m<=100) return 'QF';
+    if(m===101||m===102) return 'SF';
+    if(m===103) return '3P';
+    if(m===104) return 'F';
+    return '';
+  }
+  var entries=Object.keys(KO_META).map(function(d){ return {d:d,x:KO_META[d]}; }).sort(function(a,b){ return a.x.m-b.x.m; });
+  var rows=entries.map(function(e){
+    var x=e.x, ref=x.ref||'';
+    var lu=lookupRef(ref);
+    var cpm=lu.t?lu.t.cpm:null, ypg=lu.r?lu.r.ypg:null;
+    var val=cpm!==null?cpm:ypg, src=cpm!==null?'WC26':ypg!==null?'hist':'—';
+    var color=heatColor(val);
+    var badge=ref
+      ?'<span style="background:'+color+';color:#fff;border-radius:4px;padding:2px 7px;font-size:.71rem;font-weight:700;letter-spacing:.02em">'+(val!==null?val.toFixed(1):'?')+'</span>'
+      :'<span style="background:var(--border);color:var(--muted);border-radius:4px;padding:2px 7px;font-size:.71rem">TBD</span>';
+    var detail=lu.t?lu.t.m+'gm · '+lu.t.y+'Y'+(lu.t.rc?'+'+lu.t.rc+'R':''):ypg!==null?'~'+ypg.toFixed(1)+'/gm pre-WC':'';
+    var home=x.hn?((x.hf?x.hf+' ':'')+esc(x.hn)):'<span class="faint">'+esc(x.slH||'TBD')+'</span>';
+    var away=x.an?((x.af?x.af+' ':'')+esc(x.an)):'<span class="faint">'+esc(x.slA||'TBD')+'</span>';
+    return '<tr style="border-top:1px solid var(--border)">'+
+      '<td style="padding:.3rem .55rem;font-size:.7rem;font-family:monospace;font-weight:700;white-space:nowrap;color:var(--muted)">'+stageLbl(x.m)+' M'+x.m+'</td>'+
+      '<td style="padding:.3rem .55rem;font-size:.79rem">'+home+' <span class="faint">v</span> '+away+'</td>'+
+      '<td style="padding:.3rem .55rem;font-size:.74rem;max-width:9rem">'+esc(ref||'—')+'</td>'+
+      '<td style="padding:.3rem .55rem;font-size:.69rem;color:var(--muted);white-space:nowrap">'+esc(detail)+'</td>'+
+      '<td style="padding:.3rem .55rem;text-align:right;white-space:nowrap">'+badge+' <span style="font-size:.63rem;color:var(--muted)">'+src+'</span></td>'+
+    '</tr>';
+  }).join('');
+  var legend=['<5 ','<4 ','<3.5','<3 ','<2 '].map(function(t,i){
+    var colors=['#dc2626','#ea580c','#d97706','#ca8a04','#65a30d'];
+    return '<span style="display:inline-flex;align-items:center;gap:3px"><span style="width:10px;height:10px;border-radius:2px;background:'+colors[i]+'"></span><span style="font-size:.63rem">'+t+'</span></span>';
+  }).join(' ');
+  wrap.innerHTML='<div class="surface" style="border-radius:12px;overflow:hidden;margin-bottom:.9rem">'+
+    '<div style="padding:.5rem .75rem;font-weight:700;font-family:Bricolage Grotesque,sans-serif;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.4rem">'+
+    '<span>Referee heat board</span>'+
+    '<span style="display:flex;gap:.5rem;align-items:center">'+legend+'<span class="faint" style="font-size:.7rem;font-weight:400">cards/match</span></span></div>'+
+    '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse"><tbody>'+rows+'</tbody></table></div></div>';
+}
 function renderKnockout(){
   var wrap=document.getElementById('knockoutOut'); if(!wrap||typeof FD_KNOCKOUT==='undefined') return;
   var order=['LAST_32','LAST_16','QUARTER_FINALS','SEMI_FINALS','THIRD_PLACE','FINAL'];
@@ -3911,6 +3983,7 @@ renderScorers();
 fillIntelSelect();
 renderRefs();
 renderStandings();
+renderKoHeat();
 renderKnockout();
 renderTracker();
 renderJeopardy();
