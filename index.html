@@ -3987,12 +3987,20 @@ function fmtKoDate(d){
   }catch(e){ return d; }
 }
 var KO_SUPP_RATES={
+  // RSA — SA PSL; r = yc_p90*2 + fouls_p90; Mokoena/Modiba from Joueurs-Info-Service, others WC-data estimates
   "rsa:teboho mokoena":3.10,
   "rsa:sphephelo sithole":2.90,
+  "rsa:yaya sithole":2.90,
   "rsa:aubrey modiba":2.50,
+  "rsa:nkosinathi sibisi":1.60,
+  "rsa:thalente mbatha":1.60,
+  "rsa:themba zwane":1.80,
+  // CAN fallbacks; BVS WC fouls/game where available
   "can:alistair johnston":1.80,
   "can:derek cornelius":2.60,
-  "can:liam millar":2.90
+  "can:liam millar":2.90,
+  "can:luc fougerolles":2.20,
+  "can:cyle larin":1.80
 };
 function koLookupRate(code,nm){
   if(!code||!nm) return null;
