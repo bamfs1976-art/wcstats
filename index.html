@@ -4020,9 +4020,9 @@ function renderKoBookings(){
       var badge=susp
         ?'<span style="background:#dc2626;color:#fff;border-radius:3px;padding:0 5px;font-size:.63rem;font-weight:700;letter-spacing:.03em">SUSP</span>'
         :'<span style="background:rgba(251,191,36,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.5);border-radius:3px;padding:0 5px;font-size:.63rem;font-weight:700">RISK</span>';
-      var rateHtml=rate!==null
-        ?'<span style="font-size:.7rem;color:'+riskHex(rate)+';font-weight:600;min-width:2.6rem;text-align:right" title="Club booking rate (yc/90×2 + fouls/90)">'+rate.toFixed(1)+'</span>'
-        :'<span style="min-width:2.6rem"></span>';
+      var rateHtml=rate!=null
+        ?'<span style="font-size:.7rem;color:'+riskHex(rate)+';font-weight:700;white-space:nowrap" title="Club booking rate (yc/90×2 + fouls/90)">'+rate.toFixed(2)+'</span>'
+        :'';
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:.15rem 0;border-bottom:1px solid var(--border)">'+
         '<span style="font-size:.78rem;text-transform:capitalize'+(susp?';color:#f87171':'')+'">'+esc(p.n)+'</span>'+
         '<span style="display:flex;align-items:center;gap:4px">'+rateHtml+pips+badge+'</span>'+
@@ -4099,11 +4099,14 @@ async function exportKoBkgPNG(matchNum){
       var rate=koLookupRate(codes[ci],p.n);
       ctx.fillStyle=susp?BRAND.hot:BRAND.ink; ctx.font="600 13px "+body;
       var nm=p.n.replace(/(^|\s)\S/g,function(c){ return c.toUpperCase(); });
-      while(ctx.measureText(nm).width>colW-130) nm=nm.slice(0,-1);
+      // leave room for inline rate label (~40px) before pips zone
+      while(ctx.measureText(nm).width>colW-160) nm=nm.slice(0,-1);
       ctx.fillText(nm,cx,cy);
-      if(rate!==null){
-        ctx.fillStyle=riskHex(rate); ctx.font="500 10px "+body;
-        ctx.fillText(rate.toFixed(2)+" r/90",cx,cy+12);
+      // rate drawn inline after name at same baseline — visible at canvas scale
+      if(rate!=null){
+        var nmW=ctx.measureText(nm).width;
+        ctx.fillStyle=riskHex(rate); ctx.font="700 12px "+body;
+        ctx.fillText(rate.toFixed(2),cx+nmW+8,cy);
       }
       var pipX=cx+colW-115;
       for(var i=0;i<p.y;i++){
@@ -4122,7 +4125,7 @@ async function exportKoBkgPNG(matchNum){
         ctx.strokeStyle=BRAND.warn; ctx.lineWidth=1; roundRect(ctx,cx+colW-rw,cy-11,rw,14,3); ctx.stroke();
         ctx.fillStyle=BRAND.warn; ctx.textAlign="right"; ctx.fillText("⚠ RISK",cx+colW-1,cy-1); ctx.textAlign="left";
       }
-      cy+=rate!==null?36:26;
+      cy+=28;
     });
   });
   brandFooter(ctx,W,H,P,"Yellow cards from group stage only · 2Y = suspended R32 · WC2026 Bookings Desk");
