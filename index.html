@@ -3986,6 +3986,20 @@ function fmtKoDate(d){
     return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(dt[1],10)-1]+' '+parseInt(dt[2],10)+(pt[1]?' '+pt[1]+' UTC':'');
   }catch(e){ return d; }
 }
+function koLookupRate(code,nm){
+  if(typeof PLAYERS==='undefined'||!code||!nm) return null;
+    function nn(s){ return (s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim(); }
+  var low=nn(nm), toks=low.split(" ");
+  var pool=PLAYERS.filter(function(p){ return p.t===code; });
+  var hit=pool.find(function(p){ return nn(p.n)===low; });
+  if(hit) return hit.r;
+  // all tokens of the TOURN name appear in the PLAYERS name (handles accents & middle names)
+  hit=pool.find(function(p){ var pt=nn(p.n).split(" "); return toks.every(function(t){ return pt.indexOf(t)>=0; }); });
+  if(hit) return hit.r;
+  // single-token TOURN name (e.g. "depay", "balogun"): match last token of PLAYERS name
+  if(toks.length===1) hit=pool.find(function(p){ var pt=nn(p.n).split(" "); return pt[pt.length-1]===toks[0]; });
+  return hit?hit.r:null;
+}
 function renderKoBookings(){
   var wrap=document.getElementById('koBookingsOut');
   if(!wrap||typeof KO_META==='undefined'||typeof TOURN_PLAYERS==='undefined') return;
@@ -3999,15 +4013,19 @@ function renderKoBookings(){
     if(!ps.length) return hdr+'<div class="faint" style="font-size:.77rem">No bookings</div>';
     return hdr+ps.map(function(p){
       var susp=p.y>=2;
+      var rate=koLookupRate(code,p.n);
       var pips='';
       for(var i=0;i<p.y;i++) pips+=pip(susp&&i<2?'#dc2626':'#f59e0b');
       if(p.r) pips+=pip('#dc2626');
       var badge=susp
         ?'<span style="background:#dc2626;color:#fff;border-radius:3px;padding:0 5px;font-size:.63rem;font-weight:700;letter-spacing:.03em">SUSP</span>'
         :'<span style="background:rgba(251,191,36,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.5);border-radius:3px;padding:0 5px;font-size:.63rem;font-weight:700">RISK</span>';
+      var rateHtml=rate!==null
+        ?'<span style="font-size:.7rem;color:'+riskHex(rate)+';font-weight:600;min-width:2.6rem;text-align:right" title="Club booking rate (yc/90×2 + fouls/90)">'+rate.toFixed(1)+'</span>'
+        :'<span style="min-width:2.6rem"></span>';
       return '<div style="display:flex;justify-content:space-between;align-items:center;padding:.15rem 0;border-bottom:1px solid var(--border)">'+
         '<span style="font-size:.78rem;text-transform:capitalize'+(susp?';color:#f87171':'')+'">'+esc(p.n)+'</span>'+
-        '<span style="display:flex;align-items:center;gap:4px">'+pips+badge+'</span>'+
+        '<span style="display:flex;align-items:center;gap:4px">'+rateHtml+pips+badge+'</span>'+
       '</div>';
     }).join('');
   }
@@ -4078,10 +4096,15 @@ async function exportKoBkgPNG(matchNum){
     if(!ps.length){ ctx.fillStyle=BRAND.faint; ctx.font="500 13px "+body; ctx.fillText("No bookings in group stage",cx,cy); return; }
     ps.forEach(function(p){
       var susp=p.y>=2;
+      var rate=koLookupRate(codes[ci],p.n);
       ctx.fillStyle=susp?BRAND.hot:BRAND.ink; ctx.font="600 13px "+body;
       var nm=p.n.replace(/(^|\s)\S/g,function(c){ return c.toUpperCase(); });
       while(ctx.measureText(nm).width>colW-130) nm=nm.slice(0,-1);
       ctx.fillText(nm,cx,cy);
+      if(rate!==null){
+        ctx.fillStyle=riskHex(rate); ctx.font="500 10px "+body;
+        ctx.fillText(rate.toFixed(2)+" r/90",cx,cy+12);
+      }
       var pipX=cx+colW-115;
       for(var i=0;i<p.y;i++){
         ctx.fillStyle=(susp&&i<2)?BRAND.hot:BRAND.warn;
@@ -4099,7 +4122,7 @@ async function exportKoBkgPNG(matchNum){
         ctx.strokeStyle=BRAND.warn; ctx.lineWidth=1; roundRect(ctx,cx+colW-rw,cy-11,rw,14,3); ctx.stroke();
         ctx.fillStyle=BRAND.warn; ctx.textAlign="right"; ctx.fillText("⚠ RISK",cx+colW-1,cy-1); ctx.textAlign="left";
       }
-      cy+=26;
+      cy+=rate!==null?36:26;
     });
   });
   brandFooter(ctx,W,H,P,"Yellow cards from group stage only · 2Y = suspended R32 · WC2026 Bookings Desk");
