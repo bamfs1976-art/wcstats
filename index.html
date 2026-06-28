@@ -3986,17 +3986,30 @@ function fmtKoDate(d){
     return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(dt[1],10)-1]+' '+parseInt(dt[2],10)+(pt[1]?' '+pt[1]+' UTC':'');
   }catch(e){ return d; }
 }
+var KO_SUPP_RATES={
+  "rsa:teboho mokoena":3.10,
+  "rsa:sphephelo sithole":2.90,
+  "rsa:aubrey modiba":2.50,
+  "can:alistair johnston":1.80,
+  "can:derek cornelius":2.60,
+  "can:liam millar":2.90
+};
 function koLookupRate(code,nm){
-  if(typeof PLAYERS==='undefined'||!code||!nm) return null;
-    function nn(s){ return (s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim(); }
-  var low=nn(nm), toks=low.split(" ");
+  if(!code||!nm) return null;
+  function nn(s){ return (s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim(); }
+  var low=nn(nm);
+  if(typeof KO_SUPP_RATES!=='undefined'){
+    var sKey=code.toLowerCase()+':'+low;
+    if(KO_SUPP_RATES[sKey]!=null) return KO_SUPP_RATES[sKey];
+  }
+  if(typeof PLAYERS==='undefined') return null;
+  var toks=low.split(" ");
   var pool=PLAYERS.filter(function(p){ return p.t===code; });
   var hit=pool.find(function(p){ return nn(p.n)===low; });
   if(hit) return hit.r;
-  // all tokens of the TOURN name appear in the PLAYERS name (handles accents & middle names)
   hit=pool.find(function(p){ var pt=nn(p.n).split(" "); return toks.every(function(t){ return pt.indexOf(t)>=0; }); });
   if(hit) return hit.r;
-  // single-token TOURN name (e.g. "depay", "balogun"): match last token of PLAYERS name
+  // single-token TOURN name (e.g. "depay"): match last token of PLAYERS name
   if(toks.length===1) hit=pool.find(function(p){ var pt=nn(p.n).split(" "); return pt[pt.length-1]===toks[0]; });
   return hit?hit.r:null;
 }
