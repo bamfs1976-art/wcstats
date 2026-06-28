@@ -146,6 +146,7 @@
   <!-- KNOCKOUT -->
   <section id="panel-knockout" role="tabpanel" aria-labelledby="tab-knockout" hidden>
     <div id="koHeatOut"></div>
+    <div id="koBookingsOut"></div>
     <div id="knockoutOut"></div>
   </section>
 
@@ -3961,6 +3962,154 @@ function renderKnockout(){
   wrap.innerHTML=head+sections;
 }
 
+// ---- KO stage booking-risk cards ----
+var KO_NAME_CODE={
+  "South Africa":"RSA","Canada":"CAN","Germany":"GER","Paraguay":"PAR",
+  "Netherlands":"NED","Morocco":"MAR","Brazil":"BRA","Japan":"JPN",
+  "France":"FRA","Sweden":"SWE","Côte d'Ivoire":"CIV","Norway":"NOR",
+  "Mexico":"MEX","Ecuador":"ECU","England":"ENG","Congo DR":"COD",
+  "United States":"USA","Bosnia-Herzegovina":"BIH","Belgium":"BEL","Senegal":"SEN",
+  "Portugal":"POR","Croatia":"CRO","Spain":"ESP","Austria":"AUT",
+  "Switzerland":"SUI","Algeria":"ALG","Argentina":"ARG","Cape Verde":"CPV",
+  "Colombia":"COL","Ghana":"GHA","Australia":"AUS","Egypt":"EGY"
+};
+function koPlayersFor(code){
+  if(!code||typeof TOURN_PLAYERS==='undefined'||!TOURN_PLAYERS[code]) return [];
+  return Object.keys(TOURN_PLAYERS[code]).map(function(nm){
+    var p=TOURN_PLAYERS[code][nm]; return {n:nm,y:p.y||0,r:p.r||0};
+  }).filter(function(p){ return p.y>0||p.r>0; })
+    .sort(function(a,b){ return (b.y*2+b.r*3)-(a.y*2+a.r*3); });
+}
+function fmtKoDate(d){
+  try{
+    var pt=d.split(' '),dt=pt[0].split('-');
+    return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(dt[1],10)-1]+' '+parseInt(dt[2],10)+(pt[1]?' '+pt[1]+' UTC':'');
+  }catch(e){ return d; }
+}
+function renderKoBookings(){
+  var wrap=document.getElementById('koBookingsOut');
+  if(!wrap||typeof KO_META==='undefined'||typeof TOURN_PLAYERS==='undefined') return;
+  var r32=Object.keys(KO_META).map(function(d){ return {d:d,ko:KO_META[d]}; })
+    .filter(function(e){ return e.ko.m>=73&&e.ko.m<=88; })
+    .sort(function(a,b){ return a.ko.m-b.ko.m; });
+  function pip(color){ return '<span style="display:inline-block;width:9px;height:12px;border-radius:2px;background:'+color+';margin-right:2px;vertical-align:middle"></span>'; }
+  function teamBlock(code,name,flag){
+    var ps=koPlayersFor(code);
+    var hdr='<div style="font-weight:700;font-size:.88rem;margin-bottom:.35rem">'+(flag?flag+' ':'')+esc(name||code||'TBD')+'</div>';
+    if(!ps.length) return hdr+'<div class="faint" style="font-size:.77rem">No bookings</div>';
+    return hdr+ps.map(function(p){
+      var susp=p.y>=2;
+      var pips='';
+      for(var i=0;i<p.y;i++) pips+=pip(susp&&i<2?'#dc2626':'#f59e0b');
+      if(p.r) pips+=pip('#dc2626');
+      var badge=susp
+        ?'<span style="background:#dc2626;color:#fff;border-radius:3px;padding:0 5px;font-size:.63rem;font-weight:700;letter-spacing:.03em">SUSP</span>'
+        :'<span style="background:rgba(251,191,36,.15);color:#f59e0b;border:1px solid rgba(245,158,11,.5);border-radius:3px;padding:0 5px;font-size:.63rem;font-weight:700">RISK</span>';
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:.15rem 0;border-bottom:1px solid var(--border)">'+
+        '<span style="font-size:.78rem;text-transform:capitalize'+(susp?';color:#f87171':'')+'">'+esc(p.n)+'</span>'+
+        '<span style="display:flex;align-items:center;gap:4px">'+pips+badge+'</span>'+
+      '</div>';
+    }).join('');
+  }
+  var cards=r32.map(function(e){
+    var ko=e.ko;
+    var hCode=KO_NAME_CODE[ko.hn]||null, aCode=KO_NAME_CODE[ko.an]||null;
+    var hSusp=hCode&&TOURN_PLAYERS[hCode]?Object.values(TOURN_PLAYERS[hCode]).filter(function(p){return p.y>=2;}).length:0;
+    var aSusp=aCode&&TOURN_PLAYERS[aCode]?Object.values(TOURN_PLAYERS[aCode]).filter(function(p){return p.y>=2;}).length:0;
+    var suspParts=[hSusp?(hSusp+' '+esc(ko.hn||'')+(hSusp>1?' players':' player')+' suspended'):null,aSusp?(aSusp+' '+esc(ko.an||'')+(aSusp>1?' players':' player')+' suspended'):null].filter(Boolean);
+    var suspBanner=suspParts.length?'<div style="background:#7f1d1d;color:#fca5a5;border-radius:6px;padding:.25rem .7rem;font-size:.73rem;font-weight:700;margin-bottom:.5rem">🚫 '+suspParts.join(' · ')+'</div>':'';
+    var sub=[fmtKoDate(e.d),ko.v,ko.ref].filter(Boolean).map(esc).join(' · ');
+    return '<div class="surface" style="border-radius:12px;padding:.7rem 1rem .8rem;margin-bottom:.7rem">'+
+      '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem;margin-bottom:.4rem">'+
+        '<div><div style="font-family:\'Bricolage Grotesque\',sans-serif;font-weight:800;font-size:.96rem">'+
+          '<span class="faint" style="font-family:monospace;font-size:.69rem;margin-right:.4rem">M'+ko.m+'</span>'+
+          (ko.hf?ko.hf+' ':'')+esc(ko.hn||ko.slH||'TBD')+' <span class="faint">v</span> '+(ko.af?ko.af+' ':'')+esc(ko.an||ko.slA||'TBD')+
+        '</div><div class="muted" style="font-size:.71rem;margin-top:.15rem">'+sub+'</div></div>'+
+        '<button onclick="exportKoBkgPNG('+ko.m+')" style="flex-shrink:0;background:transparent;border:1px solid var(--border);border-radius:8px;padding:.28rem .7rem;font-size:.72rem;font-weight:700;cursor:pointer;color:var(--text-2,inherit)">⬇ PNG</button>'+
+      '</div>'+
+      suspBanner+
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;border-top:1px solid var(--border);padding-top:.45rem">'+
+        '<div>'+teamBlock(hCode,ko.hn,ko.hf)+'</div>'+
+        '<div>'+teamBlock(aCode,ko.an,ko.af)+'</div>'+
+      '</div></div>';
+  }).join('');
+  wrap.innerHTML=
+    '<div class="surface" style="border-radius:12px;padding:.6rem 1rem;margin-bottom:.85rem">'+
+    '<div style="font-family:\'Bricolage Grotesque\',sans-serif;font-weight:800;font-size:1rem">R32 — Booking Risk</div>'+
+    '<p class="muted" style="margin:.2rem 0 0;font-size:.79rem">Cards from the group stage only. 2 accumulated yellows = suspended for R32; slates reset after R16. ⬇ PNG exports a match card.</p>'+
+    '</div>'+cards;
+}
+async function exportKoBkgPNG(matchNum){
+  try{ if(document.fonts&&document.fonts.ready) await document.fonts.ready; }catch(e){}
+  var entry=null;
+  Object.keys(KO_META).forEach(function(d){ if(KO_META[d].m===matchNum) entry={d:d,ko:KO_META[d]}; });
+  if(!entry) return;
+  var ko=entry.ko, W=1000, H=700, P=44;
+  var cv=document.createElement("canvas"); cv.width=W; cv.height=H;
+  var ctx=cv.getContext("2d");
+  var disp="'Bricolage Grotesque',sans-serif", body="'Hanken Grotesk',sans-serif";
+  brandBg(ctx,W,H);
+  var hy=brandHeader(ctx,W,P,"R32 · M"+matchNum);
+  ctx.textBaseline="alphabetic";
+  var ty=hy+36;
+  ctx.font="800 26px "+disp; ctx.fillStyle=BRAND.ink;
+  var hLabel=(ko.hf?ko.hf+" ":"")+(ko.hn||ko.slH||"TBD");
+  ctx.fillText(hLabel,P,ty);
+  var tw=ctx.measureText(hLabel).width;
+  ctx.fillStyle=BRAND.a2; ctx.fillText("  v  ",P+tw,ty);
+  var vw=ctx.measureText("  v  ").width;
+  ctx.fillStyle=BRAND.ink; ctx.fillText((ko.af?ko.af+" ":"")+(ko.an||ko.slA||"TBD"),P+tw+vw,ty);
+  var sub=[fmtKoDate(entry.d),ko.v,ko.ref].filter(Boolean).join(" · ");
+  ctx.fillStyle=BRAND.sub; ctx.font="500 13px "+body; ctx.fillText(sub,P,ty+20);
+  ctx.fillStyle=BRAND.warn; ctx.font="700 11px "+body;
+  ctx.fillText("2 accumulated yellows from group stage = SUSPENDED for R32  ·  Slates reset after R16",P,ty+44);
+  var divY=ty+60;
+  ctx.strokeStyle=BRAND.line; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(P,divY); ctx.lineTo(W-P,divY); ctx.stroke();
+  var colW=(W-P*2-32)/2;
+  [P,P+colW+32].forEach(function(cx,ci){
+    var names=[ko.hn||ko.slH||"TBD",ko.an||ko.slA||"TBD"];
+    var flags=[ko.hf||"",ko.af||""];
+    var codes=[KO_NAME_CODE[ko.hn]||null,KO_NAME_CODE[ko.an]||null];
+    var cy=divY+26;
+    ctx.fillStyle=BRAND.ink; ctx.font="800 17px "+disp;
+    ctx.fillText((flags[ci]?flags[ci]+" ":"")+names[ci],cx,cy); cy+=22;
+    var ps=koPlayersFor(codes[ci]);
+    if(!ps.length){ ctx.fillStyle=BRAND.faint; ctx.font="500 13px "+body; ctx.fillText("No bookings in group stage",cx,cy); return; }
+    ps.forEach(function(p){
+      var susp=p.y>=2;
+      ctx.fillStyle=susp?BRAND.hot:BRAND.ink; ctx.font="600 13px "+body;
+      var nm=p.n.replace(/(^|\s)\S/g,function(c){ return c.toUpperCase(); });
+      while(ctx.measureText(nm).width>colW-130) nm=nm.slice(0,-1);
+      ctx.fillText(nm,cx,cy);
+      var pipX=cx+colW-115;
+      for(var i=0;i<p.y;i++){
+        ctx.fillStyle=(susp&&i<2)?BRAND.hot:BRAND.warn;
+        roundRect(ctx,pipX+i*13,cy-10,9,13,2.5); ctx.fill();
+      }
+      if(p.r){ ctx.fillStyle=BRAND.hot; roundRect(ctx,pipX+p.y*13+3,cy-10,9,13,2.5); ctx.fill(); }
+      ctx.font="700 10px "+body;
+      if(susp){
+        var sw=ctx.measureText("SUSPENDED").width+12;
+        ctx.fillStyle=BRAND.hot; roundRect(ctx,cx+colW-sw,cy-11,sw,14,3); ctx.fill();
+        ctx.fillStyle="#fff"; ctx.textAlign="right"; ctx.fillText("SUSPENDED",cx+colW-1,cy-1); ctx.textAlign="left";
+      } else if(p.y>=1){
+        var rw=ctx.measureText("⚠ RISK").width+12;
+        ctx.fillStyle="rgba(251,191,36,.18)"; roundRect(ctx,cx+colW-rw,cy-11,rw,14,3); ctx.fill();
+        ctx.strokeStyle=BRAND.warn; ctx.lineWidth=1; roundRect(ctx,cx+colW-rw,cy-11,rw,14,3); ctx.stroke();
+        ctx.fillStyle=BRAND.warn; ctx.textAlign="right"; ctx.fillText("⚠ RISK",cx+colW-1,cy-1); ctx.textAlign="left";
+      }
+      cy+=26;
+    });
+  });
+  brandFooter(ctx,W,H,P,"Yellow cards from group stage only · 2Y = suspended R32 · WC2026 Bookings Desk");
+  cv.toBlob(function(blob){
+    var url=URL.createObjectURL(blob), a=document.createElement("a");
+    a.href=url; a.download="wc26-ko-m"+matchNum+"-bookings.png"; a.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); },2000);
+  },"image/png");
+}
+
 // Auto-generated by build_tourn.py from the WC26 Discipline Dashboard
 // (post-match card data) + MATCH_REF (referees via football-data.org).
 const TOURN_MATCHES=72;
@@ -3997,6 +4146,7 @@ renderRefs();
 renderStandings();
 renderKoHeat();
 renderKnockout();
+renderKoBookings();
 renderTracker();
 renderJeopardy();
 function jScore(key){ try{ if(typeof FD_RESULTS!=="undefined"&&FD_RESULTS[key]) return FD_RESULTS[key]; if(typeof RESULTS!=="undefined"&&RESULTS[key]&&RESULTS[key].auto) return RESULTS[key].s; return (typeof SCORES!=="undefined"&&SCORES[key])||null; }catch(e){ return null; } }
