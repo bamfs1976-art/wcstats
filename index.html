@@ -2772,7 +2772,7 @@ const REFS = [
   {n:"Alireza Faghani", c:"Australia", ypg:null, sample:"small", note:"26 yellows across two prior tournaments."},
   {n:"Cesar Ramos", c:"Mexico", ypg:4.2, sample:"", note:"4.18 yellows/game career. Cannot referee Mexico on nationality. WC2026: Iran v New Zealand."},
   {n:"Jesús Valenzuela", c:"Venezuela", ypg:5.0, sample:"", note:"5.0 yellows/game, strict CONMEBOL whistle. WC2026: Australia v Türkiye."},
-  {n:"Maurizio Mariani", c:"Italy", ypg:4.8, sample:"", note:"~4.8 yellows/game, strict. WC2026: Saudi Arabia v Uruguay."},
+  {n:"Maurizio Mariani", c:"Italy", ypg:3.9, sample:"", note:"3.87 YC/game 25/26 (JIS); WC2026 avg 2.00 over 2 games. WC2026: Saudi Arabia v Uruguay, COD v Colombia, Brazil v Japan."},
   {n:"Yael Falcón Pérez", c:"Argentina", ypg:4.7, sample:"", note:"~4.7 yellows/game, card-heavy. WC2026: Sweden v Tunisia."},
   {n:"Ramon Abatti", c:"Brazil", ypg:4.7, sample:"", note:"~4.7 yellows/game. WC2026: Belgium v Egypt."},
   {n:"Said Martínez", c:"Honduras", ypg:4.2, sample:"", note:"4.17 yellows/game. WC2026: Qatar v Switzerland."},
@@ -4001,8 +4001,8 @@ var KO_SUPP_RATES={
   "can:liam millar":2.90,
   "can:luc fougerolles":2.20,
   "can:cyle larin":1.80,
-  // BRA — "ryan fabinho" two-token key can't reach single-name "Fabinho" (Al Ittihad r:1.892) via normal lookup
-  "bra:ryan fabinho":1.90
+  // BRA — "ryan fabinho" is Rayan (PSG winger, confirmed official lineup JIS card); 2.1 fouls/game 25/26
+  "bra:ryan fabinho":2.10
 };
 function koLookupRate(code,nm){
   if(!code||!nm) return null;
