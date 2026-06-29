@@ -4000,7 +4000,9 @@ var KO_SUPP_RATES={
   "can:derek cornelius":2.60,
   "can:liam millar":2.90,
   "can:luc fougerolles":2.20,
-  "can:cyle larin":1.80
+  "can:cyle larin":1.80,
+  // BRA — "ryan fabinho" two-token key can't reach single-name "Fabinho" (Al Ittihad r:1.892) via normal lookup
+  "bra:ryan fabinho":1.90
 };
 function koLookupRate(code,nm){
   if(!code||!nm) return null;
