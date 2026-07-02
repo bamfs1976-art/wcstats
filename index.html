@@ -4175,9 +4175,22 @@ const RESULTS={
   "CZE|KOR":{s:"1-2",ga:["Krejčí"],gb:["Hwang In-beom","Oh Hyeon-gyu"],poss:[null,null],sh:[null,null],sot:[null,null],cor:[null,null],fl:[null,null],yc:[null,1],rc:[0,0],note:"Korea came from 0-1 down; Krejčí headed in a Coufal long throw. Lee Gi-hyuk booked."},
   "BIH|CAN":{s:"1-1",ga:["Lukić"],gb:["Larin 78'"],poss:[32,68],sh:[8,13],sot:[3,4],cor:[null,9],fl:[10,20],yc:[2,1],rc:[0,0],note:"Sub Larin rescued Canada's first-ever WC point. Demirović & Lukić booked (BIH); Johnston (CAN)."},
   "PAR|USA":{s:"1-4",ga:["Mauricio 73'"],gb:["Bobadilla 7' (og)","Balogun 31'","Balogun 45+5'","Reyna 90+8'"],poss:[null,59],sh:[9,16],sot:[1,6],cor:[1,3],fl:[17,13],yc:[5,1],rc:[0,0],note:"Record USA WC win; Balogun brace. Paraguay 5 yellows. Ream yellow overturned by VAR."},
+  // Round of 32 results
+  "CAN|RSA":{s:"1-0",note:"Canada win, South Africa eliminated."},
+  "BRA|JPN":{s:"2-1",note:"Brazil win, Japan eliminated."},
+  "GER|PAR":{s:"1-1",note:"AET — penalty result TBC."},
+  "MAR|NED":{s:"1-1",note:"AET — penalty result TBC."},
+  "CIV|NOR":{s:"1-2",note:"Norway win, Côte d'Ivoire eliminated."},
+  "FRA|SWE":{s:"3-0",note:"France win, Sweden eliminated."},
+  "ECU|MEX":{s:"0-2",note:"Mexico win, Ecuador eliminated."},
+  "COD|ENG":{s:"1-2",note:"England win, Congo DR eliminated. Noah Sadiki 2nd yellow."},
+  "BIH|USA":{s:"0-2",note:"United States win, Bosnia-Herzegovina eliminated."},
+  "BEL|SEN":{s:"3-2",note:"Belgium win, Senegal eliminated."},
 };
 // auto-results: merge official football-data.org scores into RESULTS without overriding manual entries
 if(typeof FD_RESULTS!=='undefined'){Object.keys(FD_RESULTS).forEach(function(k){ if(!RESULTS[k]) RESULTS[k]={s:FD_RESULTS[k],auto:true}; });}
+// seed all group-stage scores so every completed match appears in the Results tab
+if(typeof SCORES!=='undefined'){Object.keys(SCORES).forEach(function(k){ if(!RESULTS[k]) RESULTS[k]={s:SCORES[k],auto:true}; });}
 
 // ---- MD3 Jeopardy board: standings -> qualification stakes -> card index ----
 // Group-stage scores by sorted team-code pair, "x-y" in sorted-key order. Seed of results
@@ -4314,9 +4327,11 @@ function resultCard(k){
   const badge=(ok)=>ok?'<span style="color:var(--accent-green);font-weight:700">✓</span>':'<span style="color:var(--danger);font-weight:700">✗</span>';
   const grade=g?`<span style="font-size:.76rem;display:inline-flex;gap:.6rem;align-items:center">${badge(g.resultHit)} result ${badge(g.scoreHit)} score <span class="faint">· pick ${esc(p.r)} ${esc(p.s.replace("-","–"))}</span></span>`:"";
   const scList=(arr)=>arr&&arr.length?arr.map(s=>`<div>${esc(s)}</div>`).join(""):'<div class="faint">—</div>';
+  const hasStats=d.poss||d.sh||d.sot||d.cor||d.fl||d.yc||d.rc;
+  const roundLabel=fx&&fx.ko?esc(fx.ko):`Grp ${A.g}`;
   return `<div class="surface" style="border-radius:14px;padding:1rem 1.1rem;margin-bottom:1rem">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;flex-wrap:wrap">
-      <span class="chip surface-2" style="border:1px solid var(--border)">FT · Grp ${A.g} · Match ${fx.m}</span>
+      <span class="chip surface-2" style="border:1px solid var(--border)">FT · ${roundLabel} · Match ${fx?fx.m:""}</span>
       ${grade}
     </div>
     <div style="display:flex;align-items:center;justify-content:center;gap:1rem;margin:.7rem 0 .5rem;font-family:'Bricolage Grotesque',sans-serif">
@@ -4324,20 +4339,20 @@ function resultCard(k){
       <div class="display" style="font-size:1.9rem;min-width:74px;text-align:center">${ga}–${gb}</div>
       <div style="flex:1;text-align:left;font-weight:700;font-size:1.05rem">${crest(B,20)} ${esc(B.n)}</div>
     </div>
-    <div style="display:flex;gap:.8rem;font-size:.82rem;margin-bottom:.6rem">
+    ${d.ga!==undefined?`<div style="display:flex;gap:.8rem;font-size:.82rem;margin-bottom:.6rem">
       <div style="flex:1;text-align:right">${scList(d.ga)}</div>
       <div class="faint" style="flex:none">⚽</div>
       <div style="flex:1">${scList(d.gb)}</div>
-    </div>
-    <div class="surface-2" style="border-radius:10px;padding:.5rem .85rem">
-      ${resStatLine("Possession",d.poss[0],d.poss[1],"%")}
-      ${resStatLine("Shots",d.sh[0],d.sh[1])}
-      ${resStatLine("On target",d.sot[0],d.sot[1])}
-      ${resStatLine("Corners",d.cor[0],d.cor[1])}
-      ${resStatLine("Fouls",d.fl[0],d.fl[1])}
-      ${resStatLine("Yellow cards",d.yc[0],d.yc[1])}
-      ${resStatLine("Red cards",d.rc[0],d.rc[1])}
-    </div>
+    </div>`:""}
+    ${hasStats?`<div class="surface-2" style="border-radius:10px;padding:.5rem .85rem">
+      ${resStatLine("Possession",(d.poss||[])[0],(d.poss||[])[1],"%")}
+      ${resStatLine("Shots",(d.sh||[])[0],(d.sh||[])[1])}
+      ${resStatLine("On target",(d.sot||[])[0],(d.sot||[])[1])}
+      ${resStatLine("Corners",(d.cor||[])[0],(d.cor||[])[1])}
+      ${resStatLine("Fouls",(d.fl||[])[0],(d.fl||[])[1])}
+      ${resStatLine("Yellow cards",(d.yc||[])[0],(d.yc||[])[1])}
+      ${resStatLine("Red cards",(d.rc||[])[0],(d.rc||[])[1])}
+    </div>`:""}
     <p class="faint" style="font-size:.74rem;margin:.55rem 0 0">${d.note?esc(d.note)+" ":""}${fx&&fx.ref?`· 🧑‍⚖️ ${esc(fx.ref)}`:""}</p>
   </div>`;
 }
