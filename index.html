@@ -2777,7 +2777,7 @@ const REFS = [
   {n:"Ramon Abatti", c:"Brazil", ypg:4.7, sample:"", note:"~4.7 yellows/game. WC2026: Belgium v Egypt."},
   {n:"Said Martínez", c:"Honduras", ypg:4.2, sample:"", note:"4.17 yellows/game. WC2026: Qatar v Switzerland."},
   {n:"Slavko Vinčić", c:"Slovenia", ypg:4.1, sample:"", note:"4.13 yellows/game, balanced UEFA elite. WC2026: Brazil v Morocco."},
-  {n:"François Letexier", c:"France", ypg:4.07, sample:"", note:"4.07 yellows/game average (matchday graphic). WC2026: Côte d'Ivoire v Ecuador (replacing the injured Oliver)."},
+  {n:"François Letexier", c:"France", ypg:4.07, sample:"", note:"4.07 yellows/game average (matchday graphic). WC2026 avg 4.00 over 2 games. WC2026: Côte d'Ivoire v Ecuador, Cape Verde v Saudi Arabia, Argentina v Egypt."},
   {n:"Mustapha Ghorbal", c:"Algeria", ypg:3.9, sample:"", note:"3.87 yellows/game. WC2026: Haiti v Scotland."},
   {n:"Adham Makhadmeh", c:"Jordan", ypg:3.2, sample:"", note:"3.2 career (4.8 this season). WC2026: Cape Verde v Spain."},
   {n:"Gustavo Tejera", c:"Uruguay", ypg:5.2, sample:"", note:"~5.2 yellows/game, strict CONMEBOL whistle. WC2026: Mexico v Korea Republic."},
@@ -3854,7 +3854,7 @@ const KO_META={
   "2026-07-06 00:00":{m:92,v:"Mexico City",slH:"W79",slA:"W80",hn:"Mexico",hf:"🇲🇽",an:"England",af:"🏴󠁧󠁢󠁥󠁮󠁧󠁿",ref:"Alireza Faghani (AUS)"},
   "2026-07-06 19:00":{m:94,v:"Dallas",slH:"W83",slA:"W84",hn:"Portugal",hf:"🇵🇹",an:"Spain",af:"🇪🇸",ref:"Anthony Taylor (ENG)"},
   "2026-07-07 00:00":{m:93,v:"Seattle",slH:"W81",slA:"W82",hn:"United States",hf:"🇺🇸",an:"Belgium",af:"🇧🇪",ref:"Adham Makhadmeh (JOR)"},
-  "2026-07-07 16:00":{m:95,v:"Atlanta",slH:"W86",slA:"W88"},
+  "2026-07-07 16:00":{m:95,v:"Atlanta",slH:"W86",slA:"W88",hn:"Argentina",hf:"🇦🇷",an:"Egypt",af:"🇪🇬",ref:"François Letexier (FRA)"},
   "2026-07-07 20:00":{m:96,v:"Vancouver",slH:"W85",slA:"W87"},
   "2026-07-09 20:00":{m:97,v:"Foxborough",slH:"W89",slA:"W90"},
   "2026-07-10 19:00":{m:98,v:"Los Angeles",slH:"W93",slA:"W94"},
@@ -4189,6 +4189,8 @@ const RESULTS={
   "CRO|POR":{s:"1-2",note:"Portugal win, Croatia eliminated."},
   "AUT|ESP":{s:"0-3",note:"Spain win, Austria eliminated."},
   "ALG|SUI":{s:"0-2",note:"Switzerland win, Algeria eliminated."},
+  "ARG|CPV":{s:"3-2",note:"Argentina win, Cape Verde eliminated."},
+  "BEL|USA":{s:"4-1",note:"Belgium win, United States eliminated."},
 };
 // auto-results: merge official football-data.org scores into RESULTS without overriding manual entries
 if(typeof FD_RESULTS!=='undefined'){Object.keys(FD_RESULTS).forEach(function(k){ if(!RESULTS[k]) RESULTS[k]={s:FD_RESULTS[k],auto:true}; });}
